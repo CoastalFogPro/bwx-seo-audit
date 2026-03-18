@@ -4,8 +4,3 @@
 
 [functions]
   directory = "netlify/functions"
-  external_node_modules = ["node-fetch"]
-
-[[functions]]
-  path = "/api/claude"
-  timeout = 60
