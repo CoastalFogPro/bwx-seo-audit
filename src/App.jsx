@@ -247,7 +247,13 @@ export default function SEOAuditTool() {
       body: JSON.stringify(body),
     });
     const data = await res.json();
-    if (data.error) throw new Error(typeof data.error === "string" ? data.error : data.error.message || "API error");
+    if (!res.ok || data.error) {
+      const msg = typeof data.error === "string" ? data.error : data.error?.message || `API error (${res.status})`;
+      throw new Error(msg);
+    }
+    if (!data.content || !Array.isArray(data.content)) {
+      throw new Error("Unexpected API response format");
+    }
     return data.content.filter(b => b.type === "text").map(b => b.text).join("\n");
   };
 

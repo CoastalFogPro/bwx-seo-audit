@@ -29,13 +29,18 @@ export default async (req) => {
       );
     }
 
+    const headers = {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    };
+    if (body.tools?.some(t => t.type === "web_search_20250305")) {
+      headers["anthropic-beta"] = "web-search-2025-03-05";
+    }
+
     const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
+      headers,
       body: JSON.stringify({
         model: body.model,
         max_tokens: body.max_tokens || 4096,
