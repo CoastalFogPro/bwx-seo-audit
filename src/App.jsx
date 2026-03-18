@@ -3,8 +3,8 @@ import "./App.css";
 
 const BAYWORX_LOGO = "https://www.bayworx.com/assets/bayworx.png";
 const PHASES = [
-  { key: "analyze", label: "Researching & Analyzing", icon: "\u{1F50D}" },
-  { key: "report", label: "Generating Report", icon: "\u{1F4CA}" },
+  { key: "analyze", label: "Researching & Analyzing", icon: "🔍" },
+  { key: "report", label: "Generating Report", icon: "📊" },
 ];
 
 // ─── Helpers ────────────────────
@@ -98,7 +98,7 @@ const generateReport = (report) => {
       <span style="font-size:13px;color:#e2e8f0;line-height:1.5">${text}</span>
     </div>`;
   };
-  const bullet = (text, color, ch = "\u2192") => `<div style="display:flex;gap:8px;margin-bottom:8px"><span style="color:${color};font-size:15px">${ch}</span><span style="font-size:13px;color:#e2e8f0;line-height:1.5">${text}</span></div>`;
+  const bullet = (text, color, ch = "→") => `<div style="display:flex;gap:8px;margin-bottom:8px"><span style="color:${color};font-size:15px">${ch}</span><span style="font-size:13px;color:#e2e8f0;line-height:1.5">${text}</span></div>`;
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>SEO Audit - ${report.seo.business_name}</title>
 <style>
@@ -126,11 +126,11 @@ const generateReport = (report) => {
     <p style="font-size:14px;color:#e2e8f0;max-width:520px;margin:0 auto;line-height:1.7">${report.seo.business_description}</p>
     <div style="display:inline-block;margin-top:14px;padding:6px 16px;background:#3882f618;border-radius:20px;font-family:monospace;font-size:12px;color:#60a5fa">Market: ${report.seo.market}</div>
   </div>
-  <div class="footer">Prepared by BAYWORX LLC | 11740 Dublin Blvd Suite 205, Dublin, CA 94568 | (925) 875-0504 | bayworx.com<br/>Confidential \u2014 Prepared exclusively for ${report.seo.business_name}</div>
+  <div class="footer">Prepared by BAYWORX LLC | 11740 Dublin Blvd Suite 205, Dublin, CA 94568 | (925) 875-0504 | bayworx.com<br/>Confidential — Prepared exclusively for ${report.seo.business_name}</div>
 </div>
 <div class="page page-break">
   <div class="section">
-    <div class="section-title">\u{1F4C8} SEO Performance Scores</div>
+    <div class="section-title">📈 SEO Performance Scores</div>
     ${bar("Technical SEO", report.seo.scores.technical_seo)}
     ${bar("Content Quality", report.seo.scores.content_quality)}
     ${bar("On-Page SEO", report.seo.scores.on_page_seo)}
@@ -139,13 +139,13 @@ const generateReport = (report) => {
     ${bar("Page Speed", report.seo.scores.page_speed)}
   </div>
   <div class="section">
-    <div class="section-title">\u26A0\uFE0F Issues & Failures Found</div>
+    <div class="section-title">⚠️ Issues & Failures Found</div>
     ${(report.seo.critical_issues || []).map(t => issue("critical", t)).join("")}
     ${(report.seo.warnings || []).map(t => issue("warning", t)).join("")}
     ${(report.seo.info_items || []).map(t => issue("info", t)).join("")}
   </div>
   <div class="section">
-    <div class="section-title">\u{1F6AB} Missing SEO Elements</div>
+    <div class="section-title">🚫 Missing SEO Elements</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px">
       ${(report.seo.missing_elements || []).map(el => `<span style="padding:8px 14px;border-radius:8px;background:#ec489918;border:1px solid #ec489930;font-family:monospace;font-size:12px;color:#f9a8d4">${el}</span>`).join("")}
     </div>
@@ -154,14 +154,14 @@ const generateReport = (report) => {
 </div>
 <div class="page page-break">
   <div class="section">
-    <div class="section-title">\u{1F680} Why You Need Landing Page Funnels</div>
+    <div class="section-title">🚀 Why You Need Landing Page Funnels</div>
     <div class="card" style="border-left:4px solid #f97316;margin-bottom:24px">
       <p style="font-size:18px;font-style:italic;color:#fed7aa;line-height:1.5">"${report.market.landing_page_pitch.headline}"</p>
     </div>
     <h4 style="font-size:12px;font-weight:700;color:#f97316;letter-spacing:1px;text-transform:uppercase;margin:20px 0 12px">Problems This Solves</h4>
     ${(report.market.landing_page_pitch.problems_solved || []).map(p => bullet(p, "#f97316")).join("")}
     <h4 style="font-size:12px;font-weight:700;color:#22c55e;letter-spacing:1px;text-transform:uppercase;margin:20px 0 12px">Expected Results</h4>
-    ${(report.market.landing_page_pitch.expected_results || []).map(r => bullet(r, "#22c55e", "\u2713")).join("")}
+    ${(report.market.landing_page_pitch.expected_results || []).map(r => bullet(r, "#22c55e", "✓")).join("")}
     <h4 style="font-size:12px;font-weight:700;color:#60a5fa;letter-spacing:1px;text-transform:uppercase;margin:20px 0 12px">Recommended Funnel Types</h4>
     ${(report.market.landing_page_pitch.funnel_types || []).map((f, i) => `<div class="card" style="margin-bottom:8px"><span style="color:#60a5fa;font-weight:700">${i + 1}.</span> <span style="color:#e2e8f0;font-size:13px">${f}</span></div>`).join("")}
   </div>
@@ -169,7 +169,7 @@ const generateReport = (report) => {
 </div>
 <div class="page page-break">
   <div class="section">
-    <div class="section-title">\u{1F4A1} Additional Services & BAYWORX Solutions</div>
+    <div class="section-title">💡 Additional Services & BAYWORX Solutions</div>
     <p style="font-size:13px;color:#7c8ba5;line-height:1.6;margin-bottom:24px">${report.market.market_analysis}</p>
     ${(report.market.additional_services || []).map((svc, i) => `
       <div class="card" style="margin-bottom:20px;border-top:3px solid #3882f6">
@@ -188,7 +188,7 @@ const generateReport = (report) => {
       </div>`).join("")}
   </div>
   <div class="section" style="margin-top:30px">
-    <div class="section-title">\u{1F4DE} Next Steps</div>
+    <div class="section-title">📞 Next Steps</div>
     <div style="font-size:14px;color:#e2e8f0;line-height:2">
       <p>1. Review this audit with your team and prioritize the critical issues identified.</p>
       <p>2. Schedule a strategy call with BAYWORX to discuss a tailored action plan.</p>
@@ -390,7 +390,7 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites sco
                 {PHASES.map((p, i) => (
                   <div key={p.key} className={`loading-phase ${i > phaseIdx ? "loading-phase--inactive" : ""}`}>
                     <div className={`loading-phase__icon ${i < phaseIdx ? "loading-phase__icon--done" : i === phaseIdx ? "loading-phase__icon--active" : "loading-phase__icon--pending"}`}>
-                      {i < phaseIdx ? "\u2713" : p.icon}
+                      {i < phaseIdx ? "✓" : p.icon}
                     </div>
                     <span className={`loading-phase__label ${i === phaseIdx ? "loading-phase__label--active" : ""}`}>
                       {p.label}{i === phaseIdx ? dots : ""}
@@ -414,7 +414,7 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites sco
             {/* Download banner */}
             <div className="download-banner stagger-item">
               <span className="download-banner__text">
-                Report ready <span>\u2014 download the branded version for your client</span>
+                Report ready <span>— download the branded version for your client</span>
               </span>
               <button className="btn btn--primary" onClick={handleDownload} disabled={pdfLoading}>
                 {pdfLoading ? "Generating..." : "Download Report"}
@@ -431,13 +431,13 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites sco
             </div>
 
             {/* Business Overview */}
-            <SectionCard title="Business Overview" icon="\u{1F3E2}" iconBg="rgba(99,102,241,0.1)" accentGradient="linear-gradient(90deg, #6366f1, #818cf8)" delay={100}>
+            <SectionCard title="Business Overview" icon="🏢" iconBg="rgba(99,102,241,0.1)" accentGradient="linear-gradient(90deg, #6366f1, #818cf8)" delay={100}>
               <p className="overview-text">{report.seo.business_description}</p>
               <span className="overview-market">Market: {report.seo.market}</span>
             </SectionCard>
 
             {/* Score Grid */}
-            <SectionCard title="SEO Performance" icon="\u{1F4C8}" iconBg="rgba(34,197,94,0.1)" accentGradient="linear-gradient(90deg, #22c55e, #14b8a6)" delay={150}>
+            <SectionCard title="SEO Performance" icon="📈" iconBg="rgba(34,197,94,0.1)" accentGradient="linear-gradient(90deg, #22c55e, #14b8a6)" delay={150}>
               <div className="score-grid">
                 {scores.map((s, i) => (
                   <ScoreTile key={s.label} label={s.label} score={s.score} delay={200 + i * 60} />
@@ -446,14 +446,14 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites sco
             </SectionCard>
 
             {/* Issues */}
-            <SectionCard title="Issues Found" icon="\u26A0\uFE0F" iconBg="rgba(239,68,68,0.1)" accentGradient="linear-gradient(90deg, #ef4444, #eab308)" delay={200}>
+            <SectionCard title="Issues Found" icon="⚠️" iconBg="rgba(239,68,68,0.1)" accentGradient="linear-gradient(90deg, #ef4444, #eab308)" delay={200}>
               {report.seo.critical_issues.map((t, i) => <IssueItem key={`c${i}`} severity="critical" text={t} />)}
               {report.seo.warnings.map((t, i) => <IssueItem key={`w${i}`} severity="warning" text={t} />)}
               {report.seo.info_items.map((t, i) => <IssueItem key={`i${i}`} severity="info" text={t} />)}
             </SectionCard>
 
             {/* Missing Elements */}
-            <SectionCard title="Missing SEO Elements" icon="\u{1F6AB}" iconBg="rgba(236,72,153,0.1)" accentGradient="linear-gradient(90deg, #ec4899, #ef4444)" delay={250}>
+            <SectionCard title="Missing SEO Elements" icon="🚫" iconBg="rgba(236,72,153,0.1)" accentGradient="linear-gradient(90deg, #ec4899, #ef4444)" delay={250}>
               <div className="tag-grid">
                 {report.seo.missing_elements.map((el, i) => (
                   <span key={i} className="tag tag--pink">{el}</span>
@@ -462,7 +462,7 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites sco
             </SectionCard>
 
             {/* Landing Page Pitch */}
-            <SectionCard title="Why They Need Landing Pages" icon="\u{1F680}" iconBg="rgba(249,115,22,0.1)" accentGradient="linear-gradient(90deg, #f97316, #eab308)" delay={300}>
+            <SectionCard title="Why They Need Landing Pages" icon="🚀" iconBg="rgba(249,115,22,0.1)" accentGradient="linear-gradient(90deg, #f97316, #eab308)" delay={300}>
               <div className="pitch-quote">
                 <p className="pitch-quote__text">"{report.market.landing_page_pitch.headline}"</p>
               </div>
@@ -470,7 +470,7 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites sco
               <div className="pitch-heading" style={{ color: "var(--orange)" }}>Problems Landing Pages Solve</div>
               {report.market.landing_page_pitch.problems_solved.map((p, i) => (
                 <div key={i} className="pitch-item">
-                  <span className="pitch-item__icon" style={{ color: "var(--orange)" }}>{"\u2192"}</span>
+                  <span className="pitch-item__icon" style={{ color: "var(--orange)" }}>{"→"}</span>
                   <span className="pitch-item__text">{p}</span>
                 </div>
               ))}
@@ -478,7 +478,7 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites sco
               <div className="pitch-heading" style={{ color: "var(--green)" }}>Expected Results</div>
               {report.market.landing_page_pitch.expected_results.map((r, i) => (
                 <div key={i} className="pitch-item">
-                  <span className="pitch-item__icon" style={{ color: "var(--green)" }}>{"\u2713"}</span>
+                  <span className="pitch-item__icon" style={{ color: "var(--green)" }}>{"✓"}</span>
                   <span className="pitch-item__text">{r}</span>
                 </div>
               ))}
@@ -492,7 +492,7 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites sco
             </SectionCard>
 
             {/* Additional Services */}
-            <SectionCard title="Services & BAYWORX Solutions" icon="\u{1F4A1}" iconBg="rgba(6,182,212,0.1)" accentGradient="linear-gradient(90deg, #06b6d4, #3b82f6)" delay={350}>
+            <SectionCard title="Services & BAYWORX Solutions" icon="💡" iconBg="rgba(6,182,212,0.1)" accentGradient="linear-gradient(90deg, #06b6d4, #3b82f6)" delay={350}>
               <p style={{ fontSize: 14, color: "var(--text-muted)", margin: "0 0 20px", lineHeight: 1.65 }}>{report.market.market_analysis}</p>
               {report.market.additional_services.map((svc, i) => (
                 <div key={i} className="service-card">
