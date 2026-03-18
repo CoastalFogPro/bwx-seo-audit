@@ -235,8 +235,8 @@ export default function SEOAuditTool() {
 
   const callClaude = async (systemPrompt, userPrompt) => {
     const body = {
-      model: "claude-sonnet-4-6",
-      max_tokens: 4096,
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 2048,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     };
@@ -272,33 +272,21 @@ export default function SEOAuditTool() {
     try {
       setPhase("analyze"); setPhaseIdx(0);
 
-      const seoPromise = callClaude(
-        `You are an elite SEO auditor. Based on the URL provided, analyze the website and return your full analysis as a single JSON object. Use your knowledge of common SEO patterns, industry standards, and best practices to provide an accurate assessment.
+      const raw = await callClaude(
+        `You are an SEO auditor and digital marketing strategist for BAYWORX LLC (Managed IT, Custom Dev, Integration, Automation, Cloud, SEO/Landing Pages — 20+ years experience).
 
-SCORING CALIBRATION \u2014 align with Google PageSpeed Insights methodology:
-- 90-100 = Excellent (site follows nearly all best practices, fast, mobile-optimized, strong content)
-- 70-89 = Good (solid foundation with some room for improvement \u2014 most well-built business sites land here)
-- 50-69 = Needs Work (notable gaps in SEO strategy, missing key elements)
-- 0-49 = Poor (major fundamental problems, barely optimized)
+Analyze the given URL. Return ONLY a JSON object with this exact schema — no other text:
+{"seo":{"business_name":"string","business_description":"1-2 sentences","market":"industry","scores":{"technical_seo":0,"content_quality":0,"on_page_seo":0,"backlink_profile":0,"mobile_ux":0,"page_speed":0},"overall_score":0,"critical_issues":["3 items"],"warnings":["3 items"],"info_items":["2 items"],"missing_elements":["3-4 items"],"competitors":["3 items"]},"market":{"market_analysis":"2-3 sentences","landing_page_pitch":{"headline":"one-liner","problems_solved":["4 items"],"expected_results":["3 items"],"funnel_types":["3 items"]},"additional_services":[{"service":"name","description":"1 sentence","lead_impact":"short","bayworx_solution":"1-2 sentences on how BAYWORX delivers this"}]}}
 
-IMPORTANT: Be consistent. A typical professional business website with decent design, some blog content, proper HTTPS, and basic meta tags should score in the 55-75 range. A well-optimized site with schema markup, fast loading, strong content strategy scores 75-90. Only truly broken or abandoned sites score below 40. Do NOT default to low scores \u2014 evaluate each dimension fairly based on what you find.
+Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites score 55-75. Provide exactly 4 additional_services.`,
+        `Full SEO audit and market analysis for: ${targetUrl}`);
 
-Your ENTIRE text response must be ONLY a valid JSON object. No other text, no markdown. Schema:
-{"business_name":"string","business_description":"2-3 sentences","market":"industry/niche","scores":{"technical_seo":65,"content_quality":60,"on_page_seo":65,"backlink_profile":55,"mobile_ux":70,"page_speed":70},"overall_score":64,"critical_issues":["3-5 critical SEO problems found"],"warnings":["3-5 moderate issues"],"info_items":["2-3 minor suggestions"],"missing_elements":["specific missing SEO elements like schema markup, XML sitemap, etc"],"competitors":["comp1","comp2","comp3"]}`,
-        `Audit this website's SEO: ${targetUrl}`);
-
-      const marketPromise = callClaude(
-        `You are a digital marketing strategist who works for BAYWORX LLC, an IT solutions and custom development company with 20+ years of experience. BAYWORX offers: Managed IT, Custom App Development, System Integration, Process Automation, Cloud Hosting, and SEO/Landing Page services.
-Based on the URL provided, analyze the website and return JSON. Your ENTIRE text response must be ONLY a valid JSON object. No other text, no markdown. Schema:
-{"market_analysis":"3-4 sentences about market position and opportunity","landing_page_pitch":{"headline":"compelling one-liner about why they need landing page funnels","problems_solved":["5 specific problems landing pages solve"],"expected_results":["4 measurable outcomes"],"funnel_types":["3 recommended funnel types with descriptions"]},"additional_services":[{"service":"name","description":"2 sentences about the service","lead_impact":"expected impact","bayworx_solution":"2-3 sentences explaining specifically how BAYWORX would implement this using their custom development, integration, automation, managed IT, or hosting capabilities. Be specific and compelling."}]}
-Provide exactly 5 items in additional_services.`,
-        `Analyze this website's market and lead generation opportunities: ${targetUrl}`);
-
-      const [seoRaw, marketRaw] = await Promise.all([seoPromise, marketPromise]);
       setPhase("report"); setPhaseIdx(1);
 
-      const seoData = extractJSON(seoRaw);
-      if (!seoData || !seoData.scores) throw new Error("SEO analysis failed to parse. Please try again.");
+      const result = extractJSON(raw);
+      if (!result || !result.seo?.scores) throw new Error("Analysis failed to parse. Please try again.");
+
+      const seoData = result.seo;
       seoData.critical_issues = seoData.critical_issues || ["No data"];
       seoData.warnings = seoData.warnings || ["No data"];
       seoData.info_items = seoData.info_items || ["No data"];
@@ -309,7 +297,7 @@ Provide exactly 5 items in additional_services.`,
       seoData.market = seoData.market || "General";
       seoData.overall_score = seoData.overall_score || Math.round(Object.values(seoData.scores).reduce((a, b) => a + b, 0) / 6);
 
-      const marketInfo = extractJSON(marketRaw);
+      const marketInfo = result.market;
       if (!marketInfo || !marketInfo.landing_page_pitch) throw new Error("Market analysis failed to parse. Please try again.");
       marketInfo.market_analysis = marketInfo.market_analysis || "Analysis unavailable.";
       marketInfo.additional_services = marketInfo.additional_services || [];
@@ -317,7 +305,7 @@ Provide exactly 5 items in additional_services.`,
       marketInfo.landing_page_pitch.expected_results = marketInfo.landing_page_pitch.expected_results || [];
       marketInfo.landing_page_pitch.funnel_types = marketInfo.landing_page_pitch.funnel_types || [];
 
-      await new Promise(r => setTimeout(r, 400));
+      await new Promise(r => setTimeout(r, 300));
       setReport({ url: targetUrl, seo: seoData, market: marketInfo });
       setPhase(null); setPhaseIdx(-1);
       setTimeout(() => reportRef.current?.scrollIntoView({ behavior: "smooth" }), 200);

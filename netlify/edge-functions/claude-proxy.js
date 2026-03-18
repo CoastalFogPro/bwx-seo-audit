@@ -1,5 +1,5 @@
-// Netlify Edge Function — 30s timeout on free tier (vs 10s for regular functions)
-// Proxies requests to Anthropic API without exposing the key to the browser
+// Netlify Edge Function — proxies requests to Anthropic API
+// API key is read from Netlify env vars, never exposed to the browser
 
 export default async (req) => {
   if (req.method !== "POST") {
@@ -9,7 +9,8 @@ export default async (req) => {
     });
   }
 
-  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
+  // Trim to handle copy-paste whitespace/newlines in env var
+  const apiKey = (Deno.env.get("ANTHROPIC_API_KEY") || "").trim();
   if (!apiKey) {
     return new Response(
       JSON.stringify({ error: "Server misconfigured — missing API key" }),
@@ -36,7 +37,7 @@ export default async (req) => {
       },
       body: JSON.stringify({
         model: body.model,
-        max_tokens: body.max_tokens || 4096,
+        max_tokens: body.max_tokens || 2048,
         system: body.system || "",
         messages: body.messages,
       }),
