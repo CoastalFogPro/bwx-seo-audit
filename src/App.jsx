@@ -130,7 +130,7 @@ const generateReport = (report) => {
 </div>
 <div class="page page-break">
   <div class="section">
-    <div class="section-title">📈 SEO Performance Scores</div>
+    <div class="section-title">📈 Your SEO Performance Scores</div>
     ${bar("Technical SEO", report.seo.scores.technical_seo)}
     ${bar("Content Quality", report.seo.scores.content_quality)}
     ${bar("On-Page SEO", report.seo.scores.on_page_seo)}
@@ -139,13 +139,13 @@ const generateReport = (report) => {
     ${bar("Page Speed", report.seo.scores.page_speed)}
   </div>
   <div class="section">
-    <div class="section-title">⚠️ Issues & Failures Found</div>
+    <div class="section-title">⚠️ Issues Found on Your Website</div>
     ${(report.seo.critical_issues || []).map(t => issue("critical", t)).join("")}
     ${(report.seo.warnings || []).map(t => issue("warning", t)).join("")}
     ${(report.seo.info_items || []).map(t => issue("info", t)).join("")}
   </div>
   <div class="section">
-    <div class="section-title">🚫 Missing SEO Elements</div>
+    <div class="section-title">🚫 Missing Elements on Your Website</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px">
       ${(report.seo.missing_elements || []).map(el => `<span style="padding:8px 14px;border-radius:8px;background:#ec489918;border:1px solid #ec489930;font-family:monospace;font-size:12px;color:#f9a8d4">${el}</span>`).join("")}
     </div>
@@ -154,22 +154,22 @@ const generateReport = (report) => {
 </div>
 <div class="page page-break">
   <div class="section">
-    <div class="section-title">🚀 Why You Need Landing Page Funnels</div>
+    <div class="section-title">🚀 Why Your Business Needs Landing Page Funnels</div>
     <div class="card" style="border-left:4px solid #f97316;margin-bottom:24px">
       <p style="font-size:18px;font-style:italic;color:#fed7aa;line-height:1.5">"${report.market.landing_page_pitch.headline}"</p>
     </div>
-    <h4 style="font-size:12px;font-weight:700;color:#f97316;letter-spacing:1px;text-transform:uppercase;margin:20px 0 12px">Problems This Solves</h4>
+    <h4 style="font-size:12px;font-weight:700;color:#f97316;letter-spacing:1px;text-transform:uppercase;margin:20px 0 12px">Challenges We Can Solve For You</h4>
     ${(report.market.landing_page_pitch.problems_solved || []).map(p => bullet(p, "#f97316")).join("")}
-    <h4 style="font-size:12px;font-weight:700;color:#22c55e;letter-spacing:1px;text-transform:uppercase;margin:20px 0 12px">Expected Results</h4>
+    <h4 style="font-size:12px;font-weight:700;color:#22c55e;letter-spacing:1px;text-transform:uppercase;margin:20px 0 12px">Results You Can Expect</h4>
     ${(report.market.landing_page_pitch.expected_results || []).map(r => bullet(r, "#22c55e", "✓")).join("")}
-    <h4 style="font-size:12px;font-weight:700;color:#60a5fa;letter-spacing:1px;text-transform:uppercase;margin:20px 0 12px">Recommended Funnel Types</h4>
+    <h4 style="font-size:12px;font-weight:700;color:#60a5fa;letter-spacing:1px;text-transform:uppercase;margin:20px 0 12px">Recommended Funnels For Your Business</h4>
     ${(report.market.landing_page_pitch.funnel_types || []).map((f, i) => `<div class="card" style="margin-bottom:8px"><span style="color:#60a5fa;font-weight:700">${i + 1}.</span> <span style="color:#e2e8f0;font-size:13px">${f}</span></div>`).join("")}
   </div>
   <div class="footer">Prepared by BAYWORX LLC | bayworx.com | (925) 875-0504</div>
 </div>
 <div class="page page-break">
   <div class="section">
-    <div class="section-title">💡 Growth & Automation Opportunities</div>
+    <div class="section-title">💡 Growth & Automation Opportunities For Your Business</div>
     <p style="font-size:13px;color:#7c8ba5;line-height:1.6;margin-bottom:24px">${report.market.market_analysis}</p>
     ${(report.market.additional_services || []).map((svc, i) => `
       <div class="card" style="margin-bottom:20px;border-top:3px solid #3882f6">
@@ -179,20 +179,20 @@ const generateReport = (report) => {
         </div>
         <p style="font-size:13px;color:#e2e8f0;line-height:1.6;margin-bottom:8px;padding-left:36px">${svc.description}</p>
         <div style="padding-left:36px;margin-bottom:12px">
-          <span style="display:inline-block;padding:4px 12px;background:#22c55e18;border-radius:6px;font-family:monospace;font-size:11px;color:#86efac">Lead Impact: ${svc.lead_impact}</span>
+          <span style="display:inline-block;padding:4px 12px;background:#22c55e18;border-radius:6px;font-family:monospace;font-size:11px;color:#86efac">Expected Impact: ${svc.lead_impact}</span>
         </div>
         ${svc.bayworx_solution ? `<div style="margin-left:36px;padding:14px 18px;background:#3882f618;border-radius:10px;border-left:3px solid #3882f6">
-          <div style="font-family:monospace;font-size:10px;font-weight:700;color:#3882f6;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">How BAYWORX Delivers This</div>
+          <div style="font-family:monospace;font-size:10px;font-weight:700;color:#3882f6;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">How We Deliver This For You</div>
           <p style="font-size:12px;color:#e2e8f0;line-height:1.6">${svc.bayworx_solution}</p>
         </div>` : ""}
       </div>`).join("")}
   </div>
   <div class="section" style="margin-top:30px">
-    <div class="section-title">📞 Next Steps</div>
+    <div class="section-title">📞 Your Next Steps</div>
     <div style="font-size:14px;color:#e2e8f0;line-height:2">
-      <p>1. Review this audit with your team and prioritize the critical issues identified.</p>
-      <p>2. Schedule a strategy call with BAYWORX to discuss a tailored action plan.</p>
-      <p>3. We'll build and deploy landing page funnels and additional services to drive leads.</p>
+      <p>1. Review this audit with your team and prioritize the critical issues we've identified.</p>
+      <p>2. Schedule a free strategy call with us to discuss your tailored action plan.</p>
+      <p>3. We'll build and deploy the solutions outlined above to start driving results for your business.</p>
     </div>
   </div>
   <div class="card" style="text-align:center;margin-top:30px;border-top:3px solid #3882f6">
@@ -464,13 +464,13 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites=55-
             </div>
 
             {/* Business Overview */}
-            <SectionCard title="Business Overview" icon="🏢" iconBg="rgba(99,102,241,0.1)" accentGradient="linear-gradient(90deg, #6366f1, #818cf8)" delay={100}>
+            <SectionCard title="Your Business Overview" icon="🏢" iconBg="rgba(99,102,241,0.1)" accentGradient="linear-gradient(90deg, #6366f1, #818cf8)" delay={100}>
               <p className="overview-text">{report.seo.business_description}</p>
               <span className="overview-market">Market: {report.seo.market}</span>
             </SectionCard>
 
             {/* Score Grid */}
-            <SectionCard title="SEO Performance" icon="📈" iconBg="rgba(34,197,94,0.1)" accentGradient="linear-gradient(90deg, #22c55e, #14b8a6)" delay={150}>
+            <SectionCard title="Your SEO Performance" icon="📈" iconBg="rgba(34,197,94,0.1)" accentGradient="linear-gradient(90deg, #22c55e, #14b8a6)" delay={150}>
               <div className="score-grid">
                 {scores.map((s, i) => (
                   <ScoreTile key={s.label} label={s.label} score={s.score} delay={200 + i * 60} />
@@ -479,14 +479,14 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites=55-
             </SectionCard>
 
             {/* Issues */}
-            <SectionCard title="Issues Found" icon="⚠️" iconBg="rgba(239,68,68,0.1)" accentGradient="linear-gradient(90deg, #ef4444, #eab308)" delay={200}>
+            <SectionCard title="Issues Found on Your Website" icon="⚠️" iconBg="rgba(239,68,68,0.1)" accentGradient="linear-gradient(90deg, #ef4444, #eab308)" delay={200}>
               {report.seo.critical_issues.map((t, i) => <IssueItem key={`c${i}`} severity="critical" text={t} />)}
               {report.seo.warnings.map((t, i) => <IssueItem key={`w${i}`} severity="warning" text={t} />)}
               {report.seo.info_items.map((t, i) => <IssueItem key={`i${i}`} severity="info" text={t} />)}
             </SectionCard>
 
             {/* Missing Elements */}
-            <SectionCard title="Missing SEO Elements" icon="🚫" iconBg="rgba(236,72,153,0.1)" accentGradient="linear-gradient(90deg, #ec4899, #ef4444)" delay={250}>
+            <SectionCard title="Missing Elements on Your Website" icon="🚫" iconBg="rgba(236,72,153,0.1)" accentGradient="linear-gradient(90deg, #ec4899, #ef4444)" delay={250}>
               <div className="tag-grid">
                 {report.seo.missing_elements.map((el, i) => (
                   <span key={i} className="tag tag--pink">{el}</span>
@@ -495,12 +495,12 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites=55-
             </SectionCard>
 
             {/* Landing Page Pitch */}
-            <SectionCard title="Why They Need Landing Pages" icon="🚀" iconBg="rgba(249,115,22,0.1)" accentGradient="linear-gradient(90deg, #f97316, #eab308)" delay={300}>
+            <SectionCard title="Why Your Business Needs Landing Pages" icon="🚀" iconBg="rgba(249,115,22,0.1)" accentGradient="linear-gradient(90deg, #f97316, #eab308)" delay={300}>
               <div className="pitch-quote">
                 <p className="pitch-quote__text">"{report.market.landing_page_pitch.headline}"</p>
               </div>
 
-              <div className="pitch-heading" style={{ color: "var(--orange)" }}>Problems Landing Pages Solve</div>
+              <div className="pitch-heading" style={{ color: "var(--orange)" }}>Challenges We Can Solve For You</div>
               {report.market.landing_page_pitch.problems_solved.map((p, i) => (
                 <div key={i} className="pitch-item">
                   <span className="pitch-item__icon" style={{ color: "var(--orange)" }}>{"→"}</span>
@@ -508,7 +508,7 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites=55-
                 </div>
               ))}
 
-              <div className="pitch-heading" style={{ color: "var(--green)" }}>Expected Results</div>
+              <div className="pitch-heading" style={{ color: "var(--green)" }}>Results You Can Expect</div>
               {report.market.landing_page_pitch.expected_results.map((r, i) => (
                 <div key={i} className="pitch-item">
                   <span className="pitch-item__icon" style={{ color: "var(--green)" }}>{"✓"}</span>
@@ -516,7 +516,7 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites=55-
                 </div>
               ))}
 
-              <div className="pitch-heading" style={{ color: "var(--accent-light)" }}>Recommended Funnels</div>
+              <div className="pitch-heading" style={{ color: "var(--accent-light)" }}>Recommended Funnels For Your Business</div>
               {report.market.landing_page_pitch.funnel_types.map((f, i) => (
                 <div key={i} className="funnel-card">
                   <span className="funnel-card__number">{i + 1}.</span>{f}
@@ -525,7 +525,7 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites=55-
             </SectionCard>
 
             {/* Additional Services */}
-            <SectionCard title="Growth & Automation Opportunities" icon="💡" iconBg="rgba(6,182,212,0.1)" accentGradient="linear-gradient(90deg, #06b6d4, #3b82f6)" delay={350}>
+            <SectionCard title="Growth & Automation Opportunities For Your Business" icon="💡" iconBg="rgba(6,182,212,0.1)" accentGradient="linear-gradient(90deg, #06b6d4, #3b82f6)" delay={350}>
               <p style={{ fontSize: 14, color: "var(--text-muted)", margin: "0 0 20px", lineHeight: 1.65 }}>{report.market.market_analysis}</p>
               {report.market.additional_services.map((svc, i) => (
                 <div key={i} className="service-card">
@@ -534,10 +534,10 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites=55-
                     <span className="service-card__name">{svc.service}</span>
                   </div>
                   <p className="service-card__desc">{svc.description}</p>
-                  <div><span className="service-card__impact">Lead Impact: {svc.lead_impact}</span></div>
+                  <div><span className="service-card__impact">Expected Impact: {svc.lead_impact}</span></div>
                   {svc.bayworx_solution && (
                     <div className="service-card__solution">
-                      <div className="service-card__solution-label">How BAYWORX Delivers This</div>
+                      <div className="service-card__solution-label">How We Deliver This For You</div>
                       <p className="service-card__solution-text">{svc.bayworx_solution}</p>
                     </div>
                   )}
@@ -550,13 +550,13 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites=55-
               <img src={BAYWORX_LOGO} alt="BAYWORX" className="cta-footer__logo"
                 onError={(e) => { e.target.style.display = "none"; }} />
               <h3 className="cta-footer__title">
-                Ready to send this to <em>{report.seo.business_name}?</em>
+                Ready to grow <em>{report.seo.business_name}?</em>
               </h3>
               <p className="cta-footer__sub">
-                Download the branded report and send it to the prospect. Opens in any browser and prints beautifully.
+                Let's discuss how we can implement these solutions and start driving results for your business.
               </p>
               <button className="cta-footer__btn" onClick={handleDownload}>
-                Download Client Report
+                Download Your Full Report
               </button>
             </div>
           </div>
