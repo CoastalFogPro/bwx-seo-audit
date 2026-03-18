@@ -233,14 +233,13 @@ export default function SEOAuditTool() {
     }
   }, [phase]);
 
-  const callClaude = async (systemPrompt, userPrompt, useSearch = false) => {
+  const callClaude = async (systemPrompt, userPrompt) => {
     const body = {
       model: "claude-sonnet-4-5-20250929",
       max_tokens: 4096,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     };
-    if (useSearch) body.tools = [{ type: "web_search_20250305", name: "web_search" }];
     const res = await fetch("/api/claude", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -273,7 +272,7 @@ export default function SEOAuditTool() {
       setPhase("analyze"); setPhaseIdx(0);
 
       const seoPromise = callClaude(
-        `You are an elite SEO auditor. Search for the given website, then return your full analysis as a single JSON object. Do ONE quick search, then immediately produce JSON.
+        `You are an elite SEO auditor. Based on the URL provided, analyze the website and return your full analysis as a single JSON object. Use your knowledge of common SEO patterns, industry standards, and best practices to provide an accurate assessment.
 
 SCORING CALIBRATION \u2014 align with Google PageSpeed Insights methodology:
 - 90-100 = Excellent (site follows nearly all best practices, fast, mobile-optimized, strong content)
@@ -285,14 +284,14 @@ IMPORTANT: Be consistent. A typical professional business website with decent de
 
 Your ENTIRE text response must be ONLY a valid JSON object. No other text, no markdown. Schema:
 {"business_name":"string","business_description":"2-3 sentences","market":"industry/niche","scores":{"technical_seo":65,"content_quality":60,"on_page_seo":65,"backlink_profile":55,"mobile_ux":70,"page_speed":70},"overall_score":64,"critical_issues":["3-5 critical SEO problems found"],"warnings":["3-5 moderate issues"],"info_items":["2-3 minor suggestions"],"missing_elements":["specific missing SEO elements like schema markup, XML sitemap, etc"],"competitors":["comp1","comp2","comp3"]}`,
-        `Audit this website's SEO: ${targetUrl}`, true);
+        `Audit this website's SEO: ${targetUrl}`);
 
       const marketPromise = callClaude(
         `You are a digital marketing strategist who works for BAYWORX LLC, an IT solutions and custom development company with 20+ years of experience. BAYWORX offers: Managed IT, Custom App Development, System Integration, Process Automation, Cloud Hosting, and SEO/Landing Page services.
-Search for the given website, then return JSON. Your ENTIRE text response must be ONLY a valid JSON object. No other text, no markdown. Schema:
+Based on the URL provided, analyze the website and return JSON. Your ENTIRE text response must be ONLY a valid JSON object. No other text, no markdown. Schema:
 {"market_analysis":"3-4 sentences about market position and opportunity","landing_page_pitch":{"headline":"compelling one-liner about why they need landing page funnels","problems_solved":["5 specific problems landing pages solve"],"expected_results":["4 measurable outcomes"],"funnel_types":["3 recommended funnel types with descriptions"]},"additional_services":[{"service":"name","description":"2 sentences about the service","lead_impact":"expected impact","bayworx_solution":"2-3 sentences explaining specifically how BAYWORX would implement this using their custom development, integration, automation, managed IT, or hosting capabilities. Be specific and compelling."}]}
 Provide exactly 5 items in additional_services.`,
-        `Analyze this website's market and lead generation opportunities: ${targetUrl}`, true);
+        `Analyze this website's market and lead generation opportunities: ${targetUrl}`);
 
       const [seoRaw, marketRaw] = await Promise.all([seoPromise, marketPromise]);
       setPhase("report"); setPhaseIdx(1);
