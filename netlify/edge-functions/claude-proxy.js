@@ -6,117 +6,120 @@
 async function scrapeWebsite(url) {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000); // 8s max for scrape
+    const timer = setTimeout(() => controller.abort(), 10000);
 
     const res = await fetch(url, {
       signal: controller.signal,
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (compatible; BayworxSEOAudit/1.0; +https://bayworx.com)",
-        Accept: "text/html,application/xhtml+xml",
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Cache-Control": "no-cache",
       },
       redirect: "follow",
     });
-    clearTimeout(timeout);
+    clearTimeout(timer);
 
-    if (!res.ok) return `[Could not fetch website: HTTP ${res.status}]`;
+    if (!res.ok) {
+      return `[Website returned HTTP ${res.status}. URL: ${url}. Analyze based on the domain name and URL structure.]`;
+    }
 
     const html = await res.text();
+    if (!html || html.length < 100) {
+      return `[Website returned very little content. URL: ${url}. The site may use JavaScript rendering.]`;
+    }
 
-    // Extract useful content from HTML
+    // Extract single match
     const extract = (regex, fallback = "") => {
       const m = html.match(regex);
-      return m ? m[1].replace(/<[^>]*>/g, "").trim() : fallback;
+      return m ? m[1].replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim() : fallback;
     };
 
-    const extractAll = (regex, limit = 20) => {
+    // Extract multiple matches
+    const extractAll = (regex, max = 20) => {
       const results = [];
-      let m;
       const re = new RegExp(regex, "gi");
-      while ((m = re.exec(html)) !== null && results.length < limit) {
-        const text = m[1].replace(/<[^>]*>/g, "").trim();
-        if (text) results.push(text);
+      let m;
+      while ((m = re.exec(html)) !== null && results.length < max) {
+        const text = m[1].replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+        if (text && text.length > 1) results.push(text);
       }
       return results;
     };
 
-    const title = extract(/<title[^>]*>([\s\S]*?)<\/title>/i, "No title");
-    const metaDesc = extract(
-      /<meta[^>]*name=["']description["'][^>]*content=["']([\s\S]*?)["']/i,
-      ""
-    );
-    const metaKeywords = extract(
-      /<meta[^>]*name=["']keywords["'][^>]*content=["']([\s\S]*?)["']/i,
-      ""
-    );
-    const ogTitle = extract(
-      /<meta[^>]*property=["']og:title["'][^>]*content=["']([\s\S]*?)["']/i,
-      ""
-    );
-    const ogDesc = extract(
-      /<meta[^>]*property=["']og:description["'][^>]*content=["']([\s\S]*?)["']/i,
-      ""
-    );
-    const ogType = extract(
-      /<meta[^>]*property=["']og:type["'][^>]*content=["']([\s\S]*?)["']/i,
-      ""
-    );
+    const title = extract(/<title[^>]*>([\s\S]*?)<\/title>/i, "No title found");
+
+    // Meta tags — try both attribute orders (name before content, content before name)
+    const metaDesc =
+      extract(/<meta[^>]*name=["']description["'][^>]*content=["']([\s\S]*?)["']/i) ||
+      extract(/<meta[^>]*content=["']([\s\S]*?)["'][^>]*name=["']description["']/i);
+    const ogTitle =
+      extract(/<meta[^>]*property=["']og:title["'][^>]*content=["']([\s\S]*?)["']/i) ||
+      extract(/<meta[^>]*content=["']([\s\S]*?)["'][^>]*property=["']og:title["']/i);
+    const ogDesc =
+      extract(/<meta[^>]*property=["']og:description["'][^>]*content=["']([\s\S]*?)["']/i) ||
+      extract(/<meta[^>]*content=["']([\s\S]*?)["'][^>]*property=["']og:description["']/i);
 
     const h1s = extractAll(/<h1[^>]*>([\s\S]*?)<\/h1>/i, 5);
     const h2s = extractAll(/<h2[^>]*>([\s\S]*?)<\/h2>/i, 10);
     const h3s = extractAll(/<h3[^>]*>([\s\S]*?)<\/h3>/i, 10);
+    const paragraphs = extractAll(/<p[^>]*>([\s\S]*?)<\/p>/i, 20);
+    const listItems = extractAll(/<li[^>]*>([\s\S]*?)<\/li>/i, 15);
+    const links = extractAll(/<a[^>]*>([\s\S]*?)<\/a>/i, 25);
+    const schemaTypes = extractAll(/"@type"\s*:\s*"([^"]+)"/i, 5);
 
-    // Extract visible text from paragraphs, list items, spans in main content
-    const paragraphs = extractAll(/<p[^>]*>([\s\S]*?)<\/p>/i, 15);
-    const listItems = extractAll(/<li[^>]*>([\s\S]*?)<\/li>/i, 10);
+    // Build content summary — keep it under ~3000 chars to leave room for tokens
+    let out = `=== WEBSITE CONTENT FROM ${url} ===\n`;
+    out += `TITLE: ${title}\n`;
+    if (metaDesc) out += `DESCRIPTION: ${metaDesc}\n`;
+    if (ogTitle && ogTitle !== title) out += `OG TITLE: ${ogTitle}\n`;
+    if (ogDesc && ogDesc !== metaDesc) out += `OG DESC: ${ogDesc}\n`;
+    if (schemaTypes.length) out += `SCHEMA TYPES: ${schemaTypes.join(", ")}\n`;
+    out += "\n";
 
-    // Extract nav/menu links for site structure
-    const links = extractAll(/<a[^>]*>([\s\S]*?)<\/a>/i, 20);
+    if (h1s.length) out += `H1: ${h1s.join(" | ")}\n`;
+    if (h2s.length) out += `H2: ${h2s.join(" | ")}\n`;
+    if (h3s.length) out += `H3: ${h3s.join(" | ")}\n`;
+    out += "\n";
 
-    // Check for structured data
-    const schemaTypes = extractAll(
-      /"@type"\s*:\s*"([^"]+)"/i,
-      5
-    );
+    // Only include meaningful paragraphs (filter out tiny/empty ones)
+    const goodParas = paragraphs.filter((p) => p.length > 20).slice(0, 12);
+    if (goodParas.length) out += `CONTENT:\n${goodParas.join("\n")}\n\n`;
 
-    // Build a clean content summary
-    let content = `=== ACTUAL WEBSITE CONTENT SCRAPED FROM ${url} ===\n\n`;
-    content += `PAGE TITLE: ${title}\n`;
-    if (metaDesc) content += `META DESCRIPTION: ${metaDesc}\n`;
-    if (metaKeywords) content += `META KEYWORDS: ${metaKeywords}\n`;
-    if (ogTitle) content += `OG TITLE: ${ogTitle}\n`;
-    if (ogDesc) content += `OG DESCRIPTION: ${ogDesc}\n`;
-    if (ogType) content += `OG TYPE: ${ogType}\n`;
-    if (schemaTypes.length)
-      content += `SCHEMA.ORG TYPES: ${schemaTypes.join(", ")}\n`;
-    content += "\n";
+    if (listItems.length) out += `LIST ITEMS: ${listItems.join(" | ")}\n\n`;
 
-    if (h1s.length) content += `H1 HEADINGS:\n${h1s.map((h) => `  - ${h}`).join("\n")}\n\n`;
-    if (h2s.length) content += `H2 HEADINGS:\n${h2s.map((h) => `  - ${h}`).join("\n")}\n\n`;
-    if (h3s.length) content += `H3 HEADINGS:\n${h3s.map((h) => `  - ${h}`).join("\n")}\n\n`;
+    const uniqueLinks = [...new Set(links.filter((l) => l.length > 2 && l.length < 50))].slice(0, 12);
+    if (uniqueLinks.length) out += `NAV: ${uniqueLinks.join(" | ")}\n`;
 
-    if (paragraphs.length)
-      content += `PAGE CONTENT (paragraphs):\n${paragraphs.map((p) => `  ${p}`).join("\n")}\n\n`;
-    if (listItems.length)
-      content += `LIST ITEMS:\n${listItems.map((l) => `  - ${l}`).join("\n")}\n\n`;
+    out += `=== END ===`;
 
-    if (links.length) {
-      const uniqueLinks = [...new Set(links.filter((l) => l.length > 1 && l.length < 60))];
-      content += `NAVIGATION/LINKS:\n${uniqueLinks.slice(0, 15).map((l) => `  - ${l}`).join("\n")}\n\n`;
-    }
+    // Hard cap to prevent token overflow
+    if (out.length > 4000) out = out.slice(0, 4000) + "\n[...truncated]";
 
-    content += `=== END OF SCRAPED CONTENT ===`;
-
-    return content;
+    return out;
   } catch (err) {
     if (err.name === "AbortError") {
-      return `[Website fetch timed out after 8 seconds — analyze based on URL and domain name]`;
+      return `[Website fetch timed out. URL: ${url}. Analyze based on the domain name.]`;
     }
-    return `[Could not fetch website: ${err.message}]`;
+    return `[Could not fetch website (${err.message}). URL: ${url}. Analyze based on the domain name.]`;
   }
 }
 
 export default async (req) => {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+    });
+  }
+
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
@@ -143,16 +146,12 @@ export default async (req) => {
     }
 
     // If a targetUrl is provided, scrape it and prepend content to the user message
-    let messages = body.messages;
+    let messages = [...body.messages];
     if (body.targetUrl) {
-      const scrapedContent = await scrapeWebsite(body.targetUrl);
-      // Prepend scraped content to the last user message
+      const scraped = await scrapeWebsite(body.targetUrl);
       messages = messages.map((msg, i) => {
         if (i === messages.length - 1 && msg.role === "user") {
-          return {
-            ...msg,
-            content: `${scrapedContent}\n\n${msg.content}`,
-          };
+          return { ...msg, content: scraped + "\n\n" + msg.content };
         }
         return msg;
       });
@@ -169,7 +168,7 @@ export default async (req) => {
         model: body.model,
         max_tokens: body.max_tokens || 2048,
         system: body.system || "",
-        messages: messages,
+        messages,
       }),
     });
 
@@ -177,12 +176,21 @@ export default async (req) => {
 
     return new Response(JSON.stringify(data), {
       status: anthropicRes.status,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+      },
     });
   } catch (err) {
     return new Response(
       JSON.stringify({ error: "Proxy error: " + err.message }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+      {
+        status: 500,
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*",
+        },
+      }
     );
   }
 };
