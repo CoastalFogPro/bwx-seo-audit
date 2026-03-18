@@ -1,8 +1,7 @@
-// Netlify serverless function — proxies requests to Anthropic API
-// The ANTHROPIC_API_KEY env var is set in Netlify dashboard, never exposed to the browser
+// Netlify Edge Function — 30s timeout on free tier (vs 10s for regular functions)
+// Proxies requests to Anthropic API without exposing the key to the browser
 
 export default async (req) => {
-  // Only allow POST
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
@@ -10,7 +9,7 @@ export default async (req) => {
     });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = Deno.env.get("ANTHROPIC_API_KEY");
   if (!apiKey) {
     return new Response(
       JSON.stringify({ error: "Server misconfigured — missing API key" }),
@@ -21,7 +20,6 @@ export default async (req) => {
   try {
     const body = await req.json();
 
-    // Basic validation — only allow messages endpoint params
     if (!body.messages || !body.model) {
       return new Response(
         JSON.stringify({ error: "Invalid request body" }),
@@ -60,6 +58,4 @@ export default async (req) => {
 
 export const config = {
   path: "/api/claude",
-  method: "POST",
-  preferStatic: true,
 };
