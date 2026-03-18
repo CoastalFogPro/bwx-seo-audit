@@ -262,10 +262,20 @@ export default function SEOAuditTool() {
   };
 
   const extractJSON = (text) => {
+    // Strip markdown fences, leading/trailing whitespace
     let cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
     try { return JSON.parse(cleaned); } catch { /* */ }
+    // Try to find JSON object boundaries
     const f = cleaned.indexOf("{"), l = cleaned.lastIndexOf("}");
-    if (f !== -1 && l > f) { try { return JSON.parse(cleaned.slice(f, l + 1)); } catch { /* */ } }
+    if (f !== -1 && l > f) {
+      try { return JSON.parse(cleaned.slice(f, l + 1)); } catch { /* */ }
+    }
+    // Try fixing common issues: trailing commas, unescaped newlines in strings
+    if (f !== -1 && l > f) {
+      let attempt = cleaned.slice(f, l + 1);
+      attempt = attempt.replace(/,\s*}/g, "}").replace(/,\s*]/g, "]");
+      try { return JSON.parse(attempt); } catch { /* */ }
+    }
     return null;
   };
 
@@ -304,7 +314,10 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites=55-
       setPhase("report"); setPhaseIdx(1);
 
       const result = extractJSON(raw);
-      if (!result || !result.seo?.scores) throw new Error("Analysis failed to parse. Please try again.");
+      if (!result || !result.seo?.scores) {
+        console.error("RAW CLAUDE RESPONSE:", raw);
+        throw new Error("Analysis failed to parse. Raw response (first 300 chars): " + (raw || "EMPTY").slice(0, 300));
+      }
 
       const seoData = result.seo;
       seoData.critical_issues = seoData.critical_issues || ["No data"];
