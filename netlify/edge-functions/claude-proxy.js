@@ -2,24 +2,51 @@
 // Fetches target website HTML so Claude can analyze the ACTUAL business
 // API key is read from Netlify env vars, never exposed to the browser
 
+/** Try fetching a URL with full browser-like headers */
+async function tryFetch(url, signal) {
+  return fetch(url, {
+    signal,
+    headers: {
+      "User-Agent":
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+      Accept:
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+      "Accept-Language": "en-US,en;q=0.9",
+      "Accept-Encoding": "gzip, deflate, br",
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+      "Sec-Ch-Ua": '"Chromium";v="131", "Not_A Brand";v="24"',
+      "Sec-Ch-Ua-Mobile": "?0",
+      "Sec-Ch-Ua-Platform": '"macOS"',
+      "Sec-Fetch-Dest": "document",
+      "Sec-Fetch-Mode": "navigate",
+      "Sec-Fetch-Site": "none",
+      "Sec-Fetch-User": "?1",
+      "Upgrade-Insecure-Requests": "1",
+    },
+    redirect: "follow",
+  });
+}
+
 /** Fetch a website and extract key text content */
 async function scrapeWebsite(url) {
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 10000);
 
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Cache-Control": "no-cache",
-      },
-      redirect: "follow",
-    });
+    let res = await tryFetch(url, controller.signal);
+
+    // If blocked, try www variant or vice versa
+    if (res.status === 403 || res.status === 406) {
+      const urlObj = new URL(url);
+      if (urlObj.hostname.startsWith("www.")) {
+        urlObj.hostname = urlObj.hostname.slice(4);
+      } else {
+        urlObj.hostname = "www." + urlObj.hostname;
+      }
+      res = await tryFetch(urlObj.toString(), controller.signal);
+    }
+
     clearTimeout(timer);
 
     if (!res.ok) {
