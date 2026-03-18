@@ -233,13 +233,14 @@ export default function SEOAuditTool() {
     }
   }, [phase]);
 
-  const callClaude = async (systemPrompt, userPrompt) => {
+  const callClaude = async (systemPrompt, userPrompt, targetUrl) => {
     const body = {
       model: "claude-haiku-4-5-20251001",
       max_tokens: 2048,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     };
+    if (targetUrl) body.targetUrl = targetUrl;
     const res = await fetch("/api/claude", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -275,16 +276,16 @@ export default function SEOAuditTool() {
       const raw = await callClaude(
         `You are an SEO auditor and business growth strategist working for BAYWORX LLC (Custom Dev, System Integration, Process Automation, Cloud Hosting, Managed IT, SEO/Landing Pages — 20+ years experience).
 
-CRITICAL: You must determine the ACTUAL business at the given URL. Do NOT guess from the domain name alone. Consider:
-- The full domain (e.g. "harvestreg.com" could be real estate, agriculture, tech — read the URL carefully)
-- Common naming patterns in different industries
-- If the business name is ambiguous, default to the most likely industry for a business website
-- The user is auditing a REAL business prospect — accuracy about what they actually do is essential
+IMPORTANT: The user message below contains ACTUAL SCRAPED CONTENT from the target website. Use this real data to determine:
+- The REAL business name (from the page title, headings, and content)
+- What the business ACTUALLY does (from their page content, descriptions, and services listed)
+- Their REAL industry and market niche
+Do NOT guess or assume — base your analysis on the scraped content provided.
 
 Return ONLY a JSON object — no other text, no markdown fences.
 
 SCHEMA:
-{"seo":{"business_name":"Actual company name","business_description":"What this company actually does, 1-2 sentences","market":"Their specific industry niche","scores":{"technical_seo":0,"content_quality":0,"on_page_seo":0,"backlink_profile":0,"mobile_ux":0,"page_speed":0},"overall_score":0,"critical_issues":["3 specific issues relevant to THEIR industry"],"warnings":["3 issues"],"info_items":["2 items"],"missing_elements":["3-4 missing SEO elements"],"competitors":["3 real competitors in their niche"]},"market":{"market_analysis":"2-3 sentences about their market position and growth opportunity in THEIR specific industry","landing_page_pitch":{"headline":"compelling pitch specific to their industry","problems_solved":["4 problems landing pages solve for THIS type of business"],"expected_results":["3 measurable outcomes for their industry"],"funnel_types":["3 funnel types tailored to their business model"]},"additional_services":[{"service":"name","description":"1 sentence","lead_impact":"expected impact","bayworx_solution":"How BAYWORX builds this"}]}}
+{"seo":{"business_name":"Actual company name from the website","business_description":"What this company actually does based on their website content, 1-2 sentences","market":"Their specific industry niche","scores":{"technical_seo":0,"content_quality":0,"on_page_seo":0,"backlink_profile":0,"mobile_ux":0,"page_speed":0},"overall_score":0,"critical_issues":["3 specific issues relevant to THEIR industry"],"warnings":["3 issues"],"info_items":["2 items"],"missing_elements":["3-4 missing SEO elements"],"competitors":["3 real competitors in their niche"]},"market":{"market_analysis":"2-3 sentences about their market position and growth opportunity in THEIR specific industry","landing_page_pitch":{"headline":"compelling pitch specific to their industry","problems_solved":["4 problems landing pages solve for THIS type of business"],"expected_results":["3 measurable outcomes for their industry"],"funnel_types":["3 funnel types tailored to their business model"]},"additional_services":[{"service":"name","description":"1 sentence","lead_impact":"expected impact","bayworx_solution":"How BAYWORX builds this"}]}}
 
 ADDITIONAL SERVICES RULES — these are upsell opportunities BEYOND SEO. Think about what tech solutions, automations, and tools would help THIS specific type of business generate more leads and streamline operations. Examples by industry:
 - Real estate: CRM integration, automated property alerts, virtual tour platforms, lead nurture drip campaigns
@@ -294,7 +295,8 @@ ADDITIONAL SERVICES RULES — these are upsell opportunities BEYOND SEO. Think a
 Do NOT suggest generic SEO services. Suggest 4 concrete tech/automation/workflow solutions specific to their industry.
 
 Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites=55-75.`,
-        `Analyze this website and provide a full SEO audit with industry-specific growth opportunities: ${targetUrl}`);
+        `Analyze this website and provide a full SEO audit with industry-specific growth opportunities: ${targetUrl}`,
+        targetUrl);
 
       setPhase("report"); setPhaseIdx(1);
 
