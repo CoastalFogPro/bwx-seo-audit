@@ -1,49 +1,81 @@
 import { useState, useRef, useEffect } from "react";
+import "./App.css";
 
 const BAYWORX_LOGO = "https://www.bayworx.com/assets/bayworx.png";
 const PHASES = [
-  { key: "analyze", label: "Researching & Analyzing", icon: "🔍" },
-  { key: "report", label: "Generating Report", icon: "📊" },
+  { key: "analyze", label: "Researching & Analyzing", icon: "\u{1F50D}" },
+  { key: "report", label: "Generating Report", icon: "\u{1F4CA}" },
 ];
-const BW = {
-  bg: "#0a0e17", surface: "rgba(20,30,50,0.6)", border: "rgba(56,130,246,0.12)",
-  accent: "#3882f6", accentLight: "#60a5fa", accentGlow: "rgba(56,130,246,0.15)",
-  orange: "#f97316", green: "#22c55e", red: "#ef4444", yellow: "#f59e0b",
-  text: "#e2e8f0", textMuted: "#7c8ba5", textDim: "#4a5568",
+
+// ─── Helpers ────────────────────
+const getScoreHex = (s) => s >= 70 ? "#22c55e" : s >= 50 ? "#eab308" : "#ef4444";
+const getGrade = (s) => s >= 90 ? "A+" : s >= 80 ? "A" : s >= 70 ? "B" : s >= 55 ? "C" : s >= 40 ? "D" : "F";
+const normalizeUrl = (input) => { let u = input.trim(); if (!/^https?:\/\//i.test(u)) u = "https://" + u; return u; };
+
+// ─── Score Ring Component ────────────────
+const ScoreRing = ({ score, size = 84, stroke = 4 }) => {
+  const radius = (size - stroke) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const [offset, setOffset] = useState(circumference);
+  const color = getScoreHex(score);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setOffset(circumference - (score / 100) * circumference);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [score, circumference]);
+
+  return (
+    <div className="score-ring" style={{ width: size, height: size }}>
+      <svg className="score-ring__svg" width={size} height={size}>
+        <circle className="score-ring__track" cx={size / 2} cy={size / 2} r={radius} />
+        <circle className="score-ring__fill" cx={size / 2} cy={size / 2} r={radius}
+          stroke={color} strokeDasharray={circumference} strokeDashoffset={offset} />
+      </svg>
+      <div className="score-ring__content">
+        <span className="score-ring__grade" style={{ color }}>{getGrade(score)}</span>
+        <span className="score-ring__value">{score}/100</span>
+      </div>
+    </div>
+  );
 };
 
-const SectionCard = ({ title, icon, children, accent }) => (
-  <div style={{ background: BW.surface, border: `1px solid ${BW.border}`, borderRadius: 16, padding: "28px 32px", marginBottom: 20, position: "relative", overflow: "hidden", backdropFilter: "blur(12px)" }}>
-    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: accent || `linear-gradient(90deg, ${BW.accent}, ${BW.accentLight})` }} />
-    <h3 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 22, fontWeight: 400, color: BW.text, margin: "0 0 18px 0", display: "flex", alignItems: "center", gap: 10 }}>
-      <span style={{ fontSize: 20 }}>{icon}</span> {title}
+// ─── Score Tile (Bento Grid) ────────────────
+const ScoreTile = ({ label, score, delay = 0 }) => {
+  const color = getScoreHex(score);
+  return (
+    <div className="score-tile stagger-item" style={{ animationDelay: `${delay}ms` }}>
+      <div className="score-tile__label">{label}</div>
+      <div className="score-tile__value" style={{ color }}>{score}</div>
+      <div className="score-tile__bar">
+        <div className="score-tile__bar-fill" style={{ width: `${score}%`, background: color }} />
+      </div>
+    </div>
+  );
+};
+
+// ─── Section Card ────────────────
+const SectionCard = ({ title, icon, iconBg, accentGradient, children, delay = 0 }) => (
+  <div className="section-card stagger-item" style={{ animationDelay: `${delay}ms` }}>
+    <div className="section-card__accent" style={{ background: accentGradient }} />
+    <h3 className="section-card__title">
+      <span className="section-card__icon" style={{ background: iconBg || "rgba(59,130,246,0.1)" }}>{icon}</span>
+      {title}
     </h3>
     {children}
   </div>
 );
 
-const ScoreBar = ({ label, score, color }) => (
-  <div style={{ marginBottom: 14 }}>
-    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-      <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, color: BW.textMuted }}>{label}</span>
-      <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 13, fontWeight: 600, color }}>{score}/100</span>
-    </div>
-    <div style={{ height: 6, background: "rgba(56,130,246,0.08)", borderRadius: 3 }}>
-      <div style={{ height: "100%", borderRadius: 3, width: `${score}%`, background: color, transition: "width 1.2s cubic-bezier(0.22,1,0.36,1)" }} />
-    </div>
+// ─── Issue Item ────────────────
+const IssueItem = ({ severity, text }) => (
+  <div className="issue-item">
+    <span className={`issue-badge issue-badge--${severity}`}>
+      {severity === "critical" ? "CRITICAL" : severity === "warning" ? "WARNING" : "INFO"}
+    </span>
+    <span className="issue-text">{text}</span>
   </div>
 );
-
-const IssueItem = ({ severity, text }) => {
-  const colors = { critical: BW.red, warning: BW.yellow, info: BW.accent };
-  const labels = { critical: "CRITICAL", warning: "WARNING", info: "INFO" };
-  return (
-    <div style={{ display: "flex", gap: 12, alignItems: "flex-start", padding: "12px 0", borderBottom: `1px solid ${BW.border}` }}>
-      <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, fontWeight: 700, color: colors[severity], background: `${colors[severity]}15`, padding: "3px 8px", borderRadius: 4, whiteSpace: "nowrap", marginTop: 2 }}>{labels[severity]}</span>
-      <span style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 14, color: BW.text, lineHeight: 1.5 }}>{text}</span>
-    </div>
-  );
-};
 
 // ─── HTML Report Generator ────────────────
 const generateReport = (report) => {
@@ -66,7 +98,7 @@ const generateReport = (report) => {
       <span style="font-size:13px;color:#e2e8f0;line-height:1.5">${text}</span>
     </div>`;
   };
-  const bullet = (text, color, ch = "→") => `<div style="display:flex;gap:8px;margin-bottom:8px"><span style="color:${color};font-size:15px">${ch}</span><span style="font-size:13px;color:#e2e8f0;line-height:1.5">${text}</span></div>`;
+  const bullet = (text, color, ch = "\u2192") => `<div style="display:flex;gap:8px;margin-bottom:8px"><span style="color:${color};font-size:15px">${ch}</span><span style="font-size:13px;color:#e2e8f0;line-height:1.5">${text}</span></div>`;
 
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>SEO Audit - ${report.seo.business_name}</title>
 <style>
@@ -94,11 +126,11 @@ const generateReport = (report) => {
     <p style="font-size:14px;color:#e2e8f0;max-width:520px;margin:0 auto;line-height:1.7">${report.seo.business_description}</p>
     <div style="display:inline-block;margin-top:14px;padding:6px 16px;background:#3882f618;border-radius:20px;font-family:monospace;font-size:12px;color:#60a5fa">Market: ${report.seo.market}</div>
   </div>
-  <div class="footer">Prepared by BAYWORX LLC | 11740 Dublin Blvd Suite 205, Dublin, CA 94568 | (925) 875-0504 | bayworx.com<br/>Confidential — Prepared exclusively for ${report.seo.business_name}</div>
+  <div class="footer">Prepared by BAYWORX LLC | 11740 Dublin Blvd Suite 205, Dublin, CA 94568 | (925) 875-0504 | bayworx.com<br/>Confidential \u2014 Prepared exclusively for ${report.seo.business_name}</div>
 </div>
 <div class="page page-break">
   <div class="section">
-    <div class="section-title">📈 SEO Performance Scores</div>
+    <div class="section-title">\u{1F4C8} SEO Performance Scores</div>
     ${bar("Technical SEO", report.seo.scores.technical_seo)}
     ${bar("Content Quality", report.seo.scores.content_quality)}
     ${bar("On-Page SEO", report.seo.scores.on_page_seo)}
@@ -107,13 +139,13 @@ const generateReport = (report) => {
     ${bar("Page Speed", report.seo.scores.page_speed)}
   </div>
   <div class="section">
-    <div class="section-title">⚠️ Issues & Failures Found</div>
+    <div class="section-title">\u26A0\uFE0F Issues & Failures Found</div>
     ${(report.seo.critical_issues || []).map(t => issue("critical", t)).join("")}
     ${(report.seo.warnings || []).map(t => issue("warning", t)).join("")}
     ${(report.seo.info_items || []).map(t => issue("info", t)).join("")}
   </div>
   <div class="section">
-    <div class="section-title">🚫 Missing SEO Elements</div>
+    <div class="section-title">\u{1F6AB} Missing SEO Elements</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px">
       ${(report.seo.missing_elements || []).map(el => `<span style="padding:8px 14px;border-radius:8px;background:#ec489918;border:1px solid #ec489930;font-family:monospace;font-size:12px;color:#f9a8d4">${el}</span>`).join("")}
     </div>
@@ -122,14 +154,14 @@ const generateReport = (report) => {
 </div>
 <div class="page page-break">
   <div class="section">
-    <div class="section-title">🚀 Why You Need Landing Page Funnels</div>
+    <div class="section-title">\u{1F680} Why You Need Landing Page Funnels</div>
     <div class="card" style="border-left:4px solid #f97316;margin-bottom:24px">
       <p style="font-size:18px;font-style:italic;color:#fed7aa;line-height:1.5">"${report.market.landing_page_pitch.headline}"</p>
     </div>
     <h4 style="font-size:12px;font-weight:700;color:#f97316;letter-spacing:1px;text-transform:uppercase;margin:20px 0 12px">Problems This Solves</h4>
     ${(report.market.landing_page_pitch.problems_solved || []).map(p => bullet(p, "#f97316")).join("")}
     <h4 style="font-size:12px;font-weight:700;color:#22c55e;letter-spacing:1px;text-transform:uppercase;margin:20px 0 12px">Expected Results</h4>
-    ${(report.market.landing_page_pitch.expected_results || []).map(r => bullet(r, "#22c55e", "✓")).join("")}
+    ${(report.market.landing_page_pitch.expected_results || []).map(r => bullet(r, "#22c55e", "\u2713")).join("")}
     <h4 style="font-size:12px;font-weight:700;color:#60a5fa;letter-spacing:1px;text-transform:uppercase;margin:20px 0 12px">Recommended Funnel Types</h4>
     ${(report.market.landing_page_pitch.funnel_types || []).map((f, i) => `<div class="card" style="margin-bottom:8px"><span style="color:#60a5fa;font-weight:700">${i + 1}.</span> <span style="color:#e2e8f0;font-size:13px">${f}</span></div>`).join("")}
   </div>
@@ -137,7 +169,7 @@ const generateReport = (report) => {
 </div>
 <div class="page page-break">
   <div class="section">
-    <div class="section-title">💡 Additional Services & BAYWORX Solutions</div>
+    <div class="section-title">\u{1F4A1} Additional Services & BAYWORX Solutions</div>
     <p style="font-size:13px;color:#7c8ba5;line-height:1.6;margin-bottom:24px">${report.market.market_analysis}</p>
     ${(report.market.additional_services || []).map((svc, i) => `
       <div class="card" style="margin-bottom:20px;border-top:3px solid #3882f6">
@@ -156,7 +188,7 @@ const generateReport = (report) => {
       </div>`).join("")}
   </div>
   <div class="section" style="margin-top:30px">
-    <div class="section-title">📞 Next Steps</div>
+    <div class="section-title">\u{1F4DE} Next Steps</div>
     <div style="font-size:14px;color:#e2e8f0;line-height:2">
       <p>1. Review this audit with your team and prioritize the critical issues identified.</p>
       <p>2. Schedule a strategy call with BAYWORX to discuss a tailored action plan.</p>
@@ -201,9 +233,6 @@ export default function SEOAuditTool() {
     }
   }, [phase]);
 
-  const normalizeUrl = (input) => { let u = input.trim(); if (!/^https?:\/\//i.test(u)) u = "https://" + u; return u; };
-
-  // Calls our Netlify Function proxy — no API key in the browser
   const callClaude = async (systemPrompt, userPrompt, useSearch = false) => {
     const body = {
       model: "claude-sonnet-4-20250514",
@@ -212,7 +241,6 @@ export default function SEOAuditTool() {
       messages: [{ role: "user", content: userPrompt }],
     };
     if (useSearch) body.tools = [{ type: "web_search_20250305", name: "web_search" }];
-
     const res = await fetch("/api/claude", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -225,9 +253,9 @@ export default function SEOAuditTool() {
 
   const extractJSON = (text) => {
     let cleaned = text.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
-    try { return JSON.parse(cleaned); } catch (e) { /* */ }
+    try { return JSON.parse(cleaned); } catch { /* */ }
     const f = cleaned.indexOf("{"), l = cleaned.lastIndexOf("}");
-    if (f !== -1 && l > f) { try { return JSON.parse(cleaned.slice(f, l + 1)); } catch (e) { /* */ } }
+    if (f !== -1 && l > f) { try { return JSON.parse(cleaned.slice(f, l + 1)); } catch { /* */ } }
     return null;
   };
 
@@ -241,13 +269,13 @@ export default function SEOAuditTool() {
       const seoPromise = callClaude(
         `You are an elite SEO auditor. Search for the given website, then return your full analysis as a single JSON object. Do ONE quick search, then immediately produce JSON.
 
-SCORING CALIBRATION — align with Google PageSpeed Insights methodology:
+SCORING CALIBRATION \u2014 align with Google PageSpeed Insights methodology:
 - 90-100 = Excellent (site follows nearly all best practices, fast, mobile-optimized, strong content)
-- 70-89 = Good (solid foundation with some room for improvement — most well-built business sites land here)
+- 70-89 = Good (solid foundation with some room for improvement \u2014 most well-built business sites land here)
 - 50-69 = Needs Work (notable gaps in SEO strategy, missing key elements)
 - 0-49 = Poor (major fundamental problems, barely optimized)
 
-IMPORTANT: Be consistent. A typical professional business website with decent design, some blog content, proper HTTPS, and basic meta tags should score in the 55-75 range. A well-optimized site with schema markup, fast loading, strong content strategy scores 75-90. Only truly broken or abandoned sites score below 40. Do NOT default to low scores — evaluate each dimension fairly based on what you find.
+IMPORTANT: Be consistent. A typical professional business website with decent design, some blog content, proper HTTPS, and basic meta tags should score in the 55-75 range. A well-optimized site with schema markup, fast loading, strong content strategy scores 75-90. Only truly broken or abandoned sites score below 40. Do NOT default to low scores \u2014 evaluate each dimension fairly based on what you find.
 
 Your ENTIRE text response must be ONLY a valid JSON object. No other text, no markdown. Schema:
 {"business_name":"string","business_description":"2-3 sentences","market":"industry/niche","scores":{"technical_seo":65,"content_quality":60,"on_page_seo":65,"backlink_profile":55,"mobile_ux":70,"page_speed":70},"overall_score":64,"critical_issues":["3-5 critical SEO problems found"],"warnings":["3-5 moderate issues"],"info_items":["2-3 minor suggestions"],"missing_elements":["specific missing SEO elements like schema markup, XML sitemap, etc"],"competitors":["comp1","comp2","comp3"]}`,
@@ -299,176 +327,214 @@ Provide exactly 5 items in additional_services.`,
     setPdfLoading(false);
   };
 
-  const getScoreColor = (s) => s >= 70 ? BW.green : s >= 50 ? BW.yellow : BW.red;
-  const getGrade = (s) => s >= 90 ? "A+" : s >= 80 ? "A" : s >= 70 ? "B" : s >= 55 ? "C" : s >= 40 ? "D" : "F";
+  const scores = report ? [
+    { label: "Technical SEO", score: report.seo.scores.technical_seo },
+    { label: "Content Quality", score: report.seo.scores.content_quality },
+    { label: "On-Page SEO", score: report.seo.scores.on_page_seo },
+    { label: "Backlink Profile", score: report.seo.scores.backlink_profile },
+    { label: "Mobile & UX", score: report.seo.scores.mobile_ux },
+    { label: "Page Speed", score: report.seo.scores.page_speed },
+  ] : [];
 
   return (
-    <div style={{ minHeight: "100vh", background: BW.bg, color: BW.text, fontFamily: "'DM Sans', sans-serif" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <>
+      {/* Ambient background */}
+      <div className="ambient-bg">
+        <div className="ambient-orb ambient-orb--blue" />
+        <div className="ambient-orb--purple ambient-orb" />
+        <div className="ambient-orb--cyan ambient-orb" />
+      </div>
+      <div className="noise-overlay" />
 
-      <div style={{ padding: "48px 32px 40px", textAlign: "center", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: -200, left: "50%", transform: "translateX(-50%)", width: 700, height: 700, borderRadius: "50%", background: "radial-gradient(circle, rgba(56,130,246,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
-        <div style={{ marginBottom: 20 }}>
-          <img src={BAYWORX_LOGO} alt="BAYWORX" style={{ height: 44, objectFit: "contain" }} onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "block"; }} />
-          <span style={{ display: "none", fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 700, color: BW.accent, letterSpacing: 2 }}>BAYWORX</span>
-        </div>
-        <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, fontWeight: 500, color: BW.accent, letterSpacing: 3, textTransform: "uppercase", marginBottom: 14 }}>Internal SEO Intelligence Tool</div>
-        <h1 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: "clamp(32px, 5vw, 48px)", fontWeight: 400, margin: "0 0 10px 0", lineHeight: 1.1 }}>
-          Client SEO <span style={{ fontStyle: "italic", color: BW.accent }}>Audit</span>
-        </h1>
-        <p style={{ fontSize: 15, color: BW.textMuted, maxWidth: 500, margin: "0 auto 36px", lineHeight: 1.6 }}>
-          Enter a prospect's URL to generate a comprehensive SEO audit with actionable upsell opportunities.
-        </p>
+      <div className="app-shell">
+        {/* ─── Header ─── */}
+        <header className="header">
+          <div>
+            <img src={BAYWORX_LOGO} alt="BAYWORX" className="header__logo"
+              onError={(e) => { e.target.style.display = "none"; e.target.nextSibling.style.display = "block"; }} />
+            <span className="header__logo-fallback">BAYWORX</span>
+          </div>
 
-        <div style={{ display: "flex", gap: 0, maxWidth: 540, margin: "0 auto", background: BW.surface, border: `1px solid ${BW.border}`, borderRadius: 12, overflow: "hidden" }}>
-          <div style={{ padding: "0 14px", display: "flex", alignItems: "center", color: BW.textMuted, fontSize: 13, fontFamily: "'DM Mono', monospace" }}>https://</div>
-          <input type="text" value={url} onChange={e => setUrl(e.target.value)} onKeyDown={e => e.key === "Enter" && !phase && runAudit()} placeholder="clientwebsite.com" disabled={!!phase}
-            style={{ flex: 1, padding: "15px 0", background: "transparent", border: "none", outline: "none", color: BW.text, fontSize: 15, fontFamily: "'DM Mono', monospace" }} />
-          <button onClick={runAudit} disabled={!!phase || !url.trim()}
-            style={{ padding: "15px 26px", border: "none", cursor: phase ? "wait" : "pointer", background: phase ? BW.textDim : BW.accent, color: "#fff", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 600, letterSpacing: 0.5, transition: "all 0.3s", opacity: (!url.trim() || phase) ? 0.5 : 1 }}>
-            {phase ? "Auditing..." : "Run Audit"}
-          </button>
-        </div>
+          <div className="header__badge">
+            <span className="header__badge-dot" />
+            Internal SEO Intelligence
+          </div>
 
-        {phase && (
-          <div style={{ marginTop: 36, maxWidth: 360, margin: "36px auto 0" }}>
-            <div style={{ display: "flex", justifyContent: "center", gap: 48, marginBottom: 20 }}>
-              {PHASES.map((p, i) => (
-                <div key={p.key} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, opacity: i <= phaseIdx ? 1 : 0.3, transition: "opacity 0.5s" }}>
-                  <div style={{ width: 40, height: 40, borderRadius: "50%", background: i < phaseIdx ? BW.green : i === phaseIdx ? BW.accent : "rgba(56,130,246,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, border: i === phaseIdx ? `2px solid ${BW.accent}` : "2px solid transparent", animation: i === phaseIdx ? "pulse 1.5s infinite" : "none" }}>
-                    {i < phaseIdx ? "✓" : p.icon}
+          <h1 className="header__title">
+            Client SEO <em>Audit</em>
+          </h1>
+
+          <p className="header__subtitle">
+            Enter a prospect's URL to generate a comprehensive SEO audit with actionable upsell opportunities.
+          </p>
+
+          {/* Search bar */}
+          <div className="search-bar">
+            <span className="search-bar__prefix">https://</span>
+            <input
+              className="search-bar__input"
+              type="text"
+              value={url}
+              onChange={e => setUrl(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && !phase && runAudit()}
+              placeholder="clientwebsite.com"
+              disabled={!!phase}
+            />
+            <button
+              className={`search-bar__btn ${phase ? "search-bar__btn--loading" : ""}`}
+              onClick={runAudit}
+              disabled={!!phase || !url.trim()}
+            >
+              {phase ? "Auditing..." : "Run Audit"}
+            </button>
+          </div>
+
+          {/* Loading */}
+          {phase && (
+            <div className="loading-section">
+              <div className="loading-phases">
+                {PHASES.map((p, i) => (
+                  <div key={p.key} className={`loading-phase ${i > phaseIdx ? "loading-phase--inactive" : ""}`}>
+                    <div className={`loading-phase__icon ${i < phaseIdx ? "loading-phase__icon--done" : i === phaseIdx ? "loading-phase__icon--active" : "loading-phase__icon--pending"}`}>
+                      {i < phaseIdx ? "\u2713" : p.icon}
+                    </div>
+                    <span className={`loading-phase__label ${i === phaseIdx ? "loading-phase__label--active" : ""}`}>
+                      {p.label}{i === phaseIdx ? dots : ""}
+                    </span>
                   </div>
-                  <span style={{ fontSize: 11, color: i === phaseIdx ? BW.accent : BW.textMuted, fontWeight: 500 }}>{p.label}{i === phaseIdx ? dots : ""}</span>
+                ))}
+              </div>
+              <div className="loading-track">
+                <div className="loading-track__fill" style={{ width: `${((phaseIdx + 0.5) / PHASES.length) * 100}%` }} />
+              </div>
+            </div>
+          )}
+
+          {/* Error */}
+          {error && <div className="error-banner">{error}</div>}
+        </header>
+
+        {/* ─── Report ─── */}
+        {report && (
+          <div ref={reportRef} className="report">
+            {/* Download banner */}
+            <div className="download-banner stagger-item">
+              <span className="download-banner__text">
+                Report ready <span>\u2014 download the branded version for your client</span>
+              </span>
+              <button className="btn btn--primary" onClick={handleDownload} disabled={pdfLoading}>
+                {pdfLoading ? "Generating..." : "Download Report"}
+              </button>
+            </div>
+
+            {/* Report header with score ring */}
+            <div className="report-header stagger-item" style={{ animationDelay: "50ms" }}>
+              <div className="report-header__info">
+                <h2>{report.seo.business_name}</h2>
+                <span className="report-header__url">{report.url}</span>
+              </div>
+              <ScoreRing score={report.seo.overall_score} />
+            </div>
+
+            {/* Business Overview */}
+            <SectionCard title="Business Overview" icon="\u{1F3E2}" iconBg="rgba(99,102,241,0.1)" accentGradient="linear-gradient(90deg, #6366f1, #818cf8)" delay={100}>
+              <p className="overview-text">{report.seo.business_description}</p>
+              <span className="overview-market">Market: {report.seo.market}</span>
+            </SectionCard>
+
+            {/* Score Grid */}
+            <SectionCard title="SEO Performance" icon="\u{1F4C8}" iconBg="rgba(34,197,94,0.1)" accentGradient="linear-gradient(90deg, #22c55e, #14b8a6)" delay={150}>
+              <div className="score-grid">
+                {scores.map((s, i) => (
+                  <ScoreTile key={s.label} label={s.label} score={s.score} delay={200 + i * 60} />
+                ))}
+              </div>
+            </SectionCard>
+
+            {/* Issues */}
+            <SectionCard title="Issues Found" icon="\u26A0\uFE0F" iconBg="rgba(239,68,68,0.1)" accentGradient="linear-gradient(90deg, #ef4444, #eab308)" delay={200}>
+              {report.seo.critical_issues.map((t, i) => <IssueItem key={`c${i}`} severity="critical" text={t} />)}
+              {report.seo.warnings.map((t, i) => <IssueItem key={`w${i}`} severity="warning" text={t} />)}
+              {report.seo.info_items.map((t, i) => <IssueItem key={`i${i}`} severity="info" text={t} />)}
+            </SectionCard>
+
+            {/* Missing Elements */}
+            <SectionCard title="Missing SEO Elements" icon="\u{1F6AB}" iconBg="rgba(236,72,153,0.1)" accentGradient="linear-gradient(90deg, #ec4899, #ef4444)" delay={250}>
+              <div className="tag-grid">
+                {report.seo.missing_elements.map((el, i) => (
+                  <span key={i} className="tag tag--pink">{el}</span>
+                ))}
+              </div>
+            </SectionCard>
+
+            {/* Landing Page Pitch */}
+            <SectionCard title="Why They Need Landing Pages" icon="\u{1F680}" iconBg="rgba(249,115,22,0.1)" accentGradient="linear-gradient(90deg, #f97316, #eab308)" delay={300}>
+              <div className="pitch-quote">
+                <p className="pitch-quote__text">"{report.market.landing_page_pitch.headline}"</p>
+              </div>
+
+              <div className="pitch-heading" style={{ color: "var(--orange)" }}>Problems Landing Pages Solve</div>
+              {report.market.landing_page_pitch.problems_solved.map((p, i) => (
+                <div key={i} className="pitch-item">
+                  <span className="pitch-item__icon" style={{ color: "var(--orange)" }}>{"\u2192"}</span>
+                  <span className="pitch-item__text">{p}</span>
                 </div>
               ))}
-            </div>
-            <div style={{ height: 3, background: "rgba(56,130,246,0.08)", borderRadius: 2 }}>
-              <div style={{ height: "100%", borderRadius: 2, background: `linear-gradient(90deg, ${BW.accent}, ${BW.accentLight})`, width: `${((phaseIdx + 0.5) / PHASES.length) * 100}%`, transition: "width 0.8s cubic-bezier(0.22,1,0.36,1)" }} />
+
+              <div className="pitch-heading" style={{ color: "var(--green)" }}>Expected Results</div>
+              {report.market.landing_page_pitch.expected_results.map((r, i) => (
+                <div key={i} className="pitch-item">
+                  <span className="pitch-item__icon" style={{ color: "var(--green)" }}>{"\u2713"}</span>
+                  <span className="pitch-item__text">{r}</span>
+                </div>
+              ))}
+
+              <div className="pitch-heading" style={{ color: "var(--accent-light)" }}>Recommended Funnels</div>
+              {report.market.landing_page_pitch.funnel_types.map((f, i) => (
+                <div key={i} className="funnel-card">
+                  <span className="funnel-card__number">{i + 1}.</span>{f}
+                </div>
+              ))}
+            </SectionCard>
+
+            {/* Additional Services */}
+            <SectionCard title="Services & BAYWORX Solutions" icon="\u{1F4A1}" iconBg="rgba(6,182,212,0.1)" accentGradient="linear-gradient(90deg, #06b6d4, #3b82f6)" delay={350}>
+              <p style={{ fontSize: 14, color: "var(--text-muted)", margin: "0 0 20px", lineHeight: 1.65 }}>{report.market.market_analysis}</p>
+              {report.market.additional_services.map((svc, i) => (
+                <div key={i} className="service-card">
+                  <div className="service-card__header">
+                    <span className="service-card__number">{i + 1}</span>
+                    <span className="service-card__name">{svc.service}</span>
+                  </div>
+                  <p className="service-card__desc">{svc.description}</p>
+                  <div><span className="service-card__impact">Lead Impact: {svc.lead_impact}</span></div>
+                  {svc.bayworx_solution && (
+                    <div className="service-card__solution">
+                      <div className="service-card__solution-label">How BAYWORX Delivers This</div>
+                      <p className="service-card__solution-text">{svc.bayworx_solution}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </SectionCard>
+
+            {/* CTA Footer */}
+            <div className="cta-footer stagger-item" style={{ animationDelay: "400ms" }}>
+              <img src={BAYWORX_LOGO} alt="BAYWORX" className="cta-footer__logo"
+                onError={(e) => { e.target.style.display = "none"; }} />
+              <h3 className="cta-footer__title">
+                Ready to send this to <em>{report.seo.business_name}?</em>
+              </h3>
+              <p className="cta-footer__sub">
+                Download the branded report and send it to the prospect. Opens in any browser and prints beautifully.
+              </p>
+              <button className="cta-footer__btn" onClick={handleDownload}>
+                Download Client Report
+              </button>
             </div>
           </div>
-        )}
-
-        {error && (
-          <div style={{ marginTop: 24, padding: "14px 22px", borderRadius: 12, background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#fca5a5", fontSize: 14, maxWidth: 540, margin: "24px auto 0" }}>{error}</div>
         )}
       </div>
-
-      {report && (
-        <div ref={reportRef} style={{ maxWidth: 760, margin: "0 auto", padding: "0 24px 80px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12, padding: "16px 24px", marginBottom: 24, background: BW.accentGlow, border: `1px solid ${BW.border}`, borderRadius: 12 }}>
-            <span style={{ fontSize: 14, color: BW.text }}>📄 Report ready — download to send to the client</span>
-            <button onClick={handleDownload} disabled={pdfLoading} style={{ padding: "10px 24px", border: "none", borderRadius: 8, background: BW.accent, color: "#fff", fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-              {pdfLoading ? "Generating..." : "Download Report"}
-            </button>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 28px", marginBottom: 24, background: BW.surface, border: `1px solid ${BW.border}`, borderRadius: 16 }}>
-            <div>
-              <h2 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 26, fontWeight: 400, margin: "0 0 4px 0", color: BW.text }}>{report.seo.business_name}</h2>
-              <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 12, color: BW.textMuted }}>{report.url}</span>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ width: 72, height: 72, borderRadius: "50%", border: `3px solid ${getScoreColor(report.seo.overall_score)}`, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 24, fontWeight: 700, color: getScoreColor(report.seo.overall_score) }}>{getGrade(report.seo.overall_score)}</span>
-                <span style={{ fontSize: 10, color: BW.textMuted }}>{report.seo.overall_score}/100</span>
-              </div>
-            </div>
-          </div>
-
-          <SectionCard title="Business Overview" icon="🏢" accent={`linear-gradient(90deg, ${BW.accent}, #818cf8)`}>
-            <p style={{ fontSize: 14, color: BW.text, lineHeight: 1.7, margin: 0 }}>{report.seo.business_description}</p>
-            <div style={{ display: "inline-block", marginTop: 12, padding: "6px 14px", background: BW.accentGlow, borderRadius: 20, fontFamily: "'DM Mono', monospace", fontSize: 12, color: BW.accentLight }}>Market: {report.seo.market}</div>
-          </SectionCard>
-
-          <SectionCard title="SEO Performance Scores" icon="📈" accent={`linear-gradient(90deg, ${BW.green}, #14b8a6)`}>
-            <ScoreBar label="Technical SEO" score={report.seo.scores.technical_seo} color={getScoreColor(report.seo.scores.technical_seo)} />
-            <ScoreBar label="Content Quality" score={report.seo.scores.content_quality} color={getScoreColor(report.seo.scores.content_quality)} />
-            <ScoreBar label="On-Page SEO" score={report.seo.scores.on_page_seo} color={getScoreColor(report.seo.scores.on_page_seo)} />
-            <ScoreBar label="Backlink Profile" score={report.seo.scores.backlink_profile} color={getScoreColor(report.seo.scores.backlink_profile)} />
-            <ScoreBar label="Mobile & UX" score={report.seo.scores.mobile_ux} color={getScoreColor(report.seo.scores.mobile_ux)} />
-            <ScoreBar label="Page Speed" score={report.seo.scores.page_speed} color={getScoreColor(report.seo.scores.page_speed)} />
-          </SectionCard>
-
-          <SectionCard title="Issues & Failures Found" icon="⚠️" accent={`linear-gradient(90deg, ${BW.red}, ${BW.yellow})`}>
-            {report.seo.critical_issues.map((t, i) => <IssueItem key={`c${i}`} severity="critical" text={t} />)}
-            {report.seo.warnings.map((t, i) => <IssueItem key={`w${i}`} severity="warning" text={t} />)}
-            {report.seo.info_items.map((t, i) => <IssueItem key={`i${i}`} severity="info" text={t} />)}
-          </SectionCard>
-
-          <SectionCard title="Missing SEO Elements" icon="🚫" accent={`linear-gradient(90deg, #ec4899, ${BW.red})`}>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {report.seo.missing_elements.map((el, i) => (
-                <span key={i} style={{ padding: "8px 16px", borderRadius: 8, background: "rgba(236,72,153,0.08)", border: "1px solid rgba(236,72,153,0.15)", fontFamily: "'DM Mono', monospace", fontSize: 12, color: "#f9a8d4" }}>{el}</span>
-              ))}
-            </div>
-          </SectionCard>
-
-          <SectionCard title="Why They Need Landing Page Funnels" icon="🚀" accent={`linear-gradient(90deg, ${BW.orange}, #eab308)`}>
-            <div style={{ padding: "20px 24px", marginBottom: 20, background: "linear-gradient(135deg, rgba(249,115,22,0.1), rgba(234,179,8,0.05))", borderRadius: 12, borderLeft: `4px solid ${BW.orange}` }}>
-              <p style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 20, fontStyle: "italic", color: "#fed7aa", margin: 0, lineHeight: 1.5 }}>"{report.market.landing_page_pitch.headline}"</p>
-            </div>
-            <h4 style={{ fontSize: 13, fontWeight: 600, color: BW.orange, margin: "20px 0 12px", letterSpacing: 1, textTransform: "uppercase" }}>Problems Landing Pages Solve</h4>
-            {report.market.landing_page_pitch.problems_solved.map((p, i) => (
-              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 10 }}>
-                <span style={{ color: BW.orange, fontSize: 16, lineHeight: 1.4 }}>→</span>
-                <span style={{ fontSize: 14, color: BW.text, lineHeight: 1.5 }}>{p}</span>
-              </div>
-            ))}
-            <h4 style={{ fontSize: 13, fontWeight: 600, color: BW.green, margin: "24px 0 12px", letterSpacing: 1, textTransform: "uppercase" }}>Expected Results</h4>
-            {report.market.landing_page_pitch.expected_results.map((r, i) => (
-              <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 10 }}>
-                <span style={{ color: BW.green, fontSize: 16, lineHeight: 1.4 }}>✓</span>
-                <span style={{ fontSize: 14, color: BW.text, lineHeight: 1.5 }}>{r}</span>
-              </div>
-            ))}
-            <h4 style={{ fontSize: 13, fontWeight: 600, color: BW.accentLight, margin: "24px 0 12px", letterSpacing: 1, textTransform: "uppercase" }}>Recommended Funnel Types</h4>
-            {report.market.landing_page_pitch.funnel_types.map((f, i) => (
-              <div key={i} style={{ padding: "12px 16px", marginBottom: 8, background: BW.accentGlow, borderRadius: 10, border: `1px solid ${BW.border}`, fontSize: 14, color: BW.text, lineHeight: 1.5 }}>
-                <span style={{ color: BW.accentLight, fontWeight: 600 }}>{i + 1}.</span> {f}
-              </div>
-            ))}
-          </SectionCard>
-
-          <SectionCard title="Additional Services & BAYWORX Solutions" icon="💡" accent={`linear-gradient(90deg, #06b6d4, ${BW.accent})`}>
-            <p style={{ fontSize: 14, color: BW.textMuted, margin: "0 0 20px", lineHeight: 1.6 }}>{report.market.market_analysis}</p>
-            {report.market.additional_services.map((svc, i) => (
-              <div key={i} style={{ padding: "20px 24px", marginBottom: 16, background: "rgba(6,182,212,0.04)", borderRadius: 12, border: "1px solid rgba(6,182,212,0.08)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-                  <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, fontWeight: 700, color: BW.bg, background: "#06b6d4", padding: "2px 10px", borderRadius: 4 }}>{i + 1}</span>
-                  <span style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 18, color: BW.text }}>{svc.service}</span>
-                </div>
-                <p style={{ fontSize: 14, color: BW.text, margin: "0 0 8px", lineHeight: 1.6, paddingLeft: 38 }}>{svc.description}</p>
-                <div style={{ paddingLeft: 38, marginBottom: 12 }}>
-                  <span style={{ display: "inline-block", padding: "4px 12px", background: "rgba(34,197,94,0.08)", borderRadius: 6, fontFamily: "'DM Mono', monospace", fontSize: 11, color: "#86efac" }}>Lead Impact: {svc.lead_impact}</span>
-                </div>
-                {svc.bayworx_solution && (
-                  <div style={{ marginLeft: 38, padding: "14px 18px", background: BW.accentGlow, borderRadius: 10, borderLeft: `3px solid ${BW.accent}` }}>
-                    <div style={{ fontFamily: "'DM Mono', monospace", fontSize: 10, fontWeight: 600, color: BW.accent, letterSpacing: 1, marginBottom: 6, textTransform: "uppercase" }}>How BAYWORX Delivers This</div>
-                    <p style={{ fontSize: 13, color: BW.text, margin: 0, lineHeight: 1.6 }}>{svc.bayworx_solution}</p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </SectionCard>
-
-          <div style={{ textAlign: "center", padding: "40px 32px", background: BW.accentGlow, borderRadius: 20, border: `1px solid ${BW.border}`, marginTop: 12 }}>
-            <img src={BAYWORX_LOGO} alt="BAYWORX" style={{ height: 36, marginBottom: 20, objectFit: "contain" }} onError={(e) => { e.target.style.display = "none"; }} />
-            <h3 style={{ fontFamily: "'Instrument Serif', Georgia, serif", fontSize: 24, fontWeight: 400, margin: "0 0 10px" }}>
-              Ready to send this to <span style={{ color: BW.accent, fontStyle: "italic" }}>{report.seo.business_name}?</span>
-            </h3>
-            <p style={{ fontSize: 14, color: BW.textMuted, maxWidth: 420, margin: "0 auto 24px" }}>Download the branded report and send it to the prospect. Opens in any browser and prints beautifully.</p>
-            <button onClick={handleDownload} style={{ padding: "14px 36px", border: "none", borderRadius: 10, background: BW.accent, color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "'DM Sans', sans-serif", letterSpacing: 0.5 }}>
-              📄  Download Client Report
-            </button>
-          </div>
-        </div>
-      )}
-
-      <style>{`
-        @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(56,130,246,0.3); } 50% { box-shadow: 0 0 0 8px rgba(56,130,246,0); } }
-        input::placeholder { color: ${BW.textDim}; }
-        * { box-sizing: border-box; }
-      `}</style>
-    </div>
+    </>
   );
 }
