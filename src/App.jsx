@@ -169,7 +169,7 @@ const generateReport = (report) => {
 </div>
 <div class="page page-break">
   <div class="section">
-    <div class="section-title">💡 Additional Services & BAYWORX Solutions</div>
+    <div class="section-title">💡 Growth & Automation Opportunities</div>
     <p style="font-size:13px;color:#7c8ba5;line-height:1.6;margin-bottom:24px">${report.market.market_analysis}</p>
     ${(report.market.additional_services || []).map((svc, i) => `
       <div class="card" style="margin-bottom:20px;border-top:3px solid #3882f6">
@@ -273,13 +273,28 @@ export default function SEOAuditTool() {
       setPhase("analyze"); setPhaseIdx(0);
 
       const raw = await callClaude(
-        `You are an SEO auditor and digital marketing strategist for BAYWORX LLC (Managed IT, Custom Dev, Integration, Automation, Cloud, SEO/Landing Pages — 20+ years experience).
+        `You are an SEO auditor and business growth strategist working for BAYWORX LLC (Custom Dev, System Integration, Process Automation, Cloud Hosting, Managed IT, SEO/Landing Pages — 20+ years experience).
 
-Analyze the given URL. Return ONLY a JSON object with this exact schema — no other text:
-{"seo":{"business_name":"string","business_description":"1-2 sentences","market":"industry","scores":{"technical_seo":0,"content_quality":0,"on_page_seo":0,"backlink_profile":0,"mobile_ux":0,"page_speed":0},"overall_score":0,"critical_issues":["3 items"],"warnings":["3 items"],"info_items":["2 items"],"missing_elements":["3-4 items"],"competitors":["3 items"]},"market":{"market_analysis":"2-3 sentences","landing_page_pitch":{"headline":"one-liner","problems_solved":["4 items"],"expected_results":["3 items"],"funnel_types":["3 items"]},"additional_services":[{"service":"name","description":"1 sentence","lead_impact":"short","bayworx_solution":"1-2 sentences on how BAYWORX delivers this"}]}}
+CRITICAL: You must determine the ACTUAL business at the given URL. Do NOT guess from the domain name alone. Consider:
+- The full domain (e.g. "harvestreg.com" could be real estate, agriculture, tech — read the URL carefully)
+- Common naming patterns in different industries
+- If the business name is ambiguous, default to the most likely industry for a business website
+- The user is auditing a REAL business prospect — accuracy about what they actually do is essential
 
-Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites score 55-75. Provide exactly 4 additional_services.`,
-        `Full SEO audit and market analysis for: ${targetUrl}`);
+Return ONLY a JSON object — no other text, no markdown fences.
+
+SCHEMA:
+{"seo":{"business_name":"Actual company name","business_description":"What this company actually does, 1-2 sentences","market":"Their specific industry niche","scores":{"technical_seo":0,"content_quality":0,"on_page_seo":0,"backlink_profile":0,"mobile_ux":0,"page_speed":0},"overall_score":0,"critical_issues":["3 specific issues relevant to THEIR industry"],"warnings":["3 issues"],"info_items":["2 items"],"missing_elements":["3-4 missing SEO elements"],"competitors":["3 real competitors in their niche"]},"market":{"market_analysis":"2-3 sentences about their market position and growth opportunity in THEIR specific industry","landing_page_pitch":{"headline":"compelling pitch specific to their industry","problems_solved":["4 problems landing pages solve for THIS type of business"],"expected_results":["3 measurable outcomes for their industry"],"funnel_types":["3 funnel types tailored to their business model"]},"additional_services":[{"service":"name","description":"1 sentence","lead_impact":"expected impact","bayworx_solution":"How BAYWORX builds this"}]}}
+
+ADDITIONAL SERVICES RULES — these are upsell opportunities BEYOND SEO. Think about what tech solutions, automations, and tools would help THIS specific type of business generate more leads and streamline operations. Examples by industry:
+- Real estate: CRM integration, automated property alerts, virtual tour platforms, lead nurture drip campaigns
+- Restaurant: online ordering system, reservation platform, loyalty program app, review management automation
+- Law firm: client intake automation, case management portal, appointment scheduling system
+- E-commerce: abandoned cart recovery, product recommendation engine, inventory sync system
+Do NOT suggest generic SEO services. Suggest 4 concrete tech/automation/workflow solutions specific to their industry.
+
+Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites=55-75.`,
+        `Analyze this website and provide a full SEO audit with industry-specific growth opportunities: ${targetUrl}`);
 
       setPhase("report"); setPhaseIdx(1);
 
@@ -492,7 +507,7 @@ Scoring: 70-89=Good, 50-69=Needs Work, below 50=Poor. Typical business sites sco
             </SectionCard>
 
             {/* Additional Services */}
-            <SectionCard title="Services & BAYWORX Solutions" icon="💡" iconBg="rgba(6,182,212,0.1)" accentGradient="linear-gradient(90deg, #06b6d4, #3b82f6)" delay={350}>
+            <SectionCard title="Growth & Automation Opportunities" icon="💡" iconBg="rgba(6,182,212,0.1)" accentGradient="linear-gradient(90deg, #06b6d4, #3b82f6)" delay={350}>
               <p style={{ fontSize: 14, color: "var(--text-muted)", margin: "0 0 20px", lineHeight: 1.65 }}>{report.market.market_analysis}</p>
               {report.market.additional_services.map((svc, i) => (
                 <div key={i} className="service-card">
