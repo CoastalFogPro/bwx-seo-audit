@@ -235,7 +235,7 @@ export default function SEOAuditTool() {
 
   const callClaude = async (systemPrompt, userPrompt) => {
     const body = {
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-sonnet-4-6",
       max_tokens: 4096,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
@@ -247,7 +247,8 @@ export default function SEOAuditTool() {
     });
     const data = await res.json();
     if (!res.ok || data.error) {
-      const msg = typeof data.error === "string" ? data.error : data.error?.message || `API error (${res.status})`;
+      const err = data.error;
+      const msg = typeof err === "string" ? err : `${err?.type || "error"}: ${err?.message || `API error (${res.status})`}`;
       throw new Error(msg);
     }
     if (!data.content || !Array.isArray(data.content)) {
