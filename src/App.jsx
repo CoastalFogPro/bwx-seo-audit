@@ -236,7 +236,7 @@ export default function SEOAuditTool() {
   const callClaude = async (systemPrompt, userPrompt, targetUrl) => {
     const body = {
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 2048,
+      max_tokens: 4096,
       system: systemPrompt,
       messages: [{ role: "user", content: userPrompt }],
     };
@@ -254,6 +254,9 @@ export default function SEOAuditTool() {
     }
     if (!data.content || !Array.isArray(data.content)) {
       throw new Error("Unexpected API response format");
+    }
+    if (data.stop_reason === "max_tokens") {
+      throw new Error("Response was truncated. Please try again.");
     }
     return data.content.filter(b => b.type === "text").map(b => b.text).join("\n");
   };
